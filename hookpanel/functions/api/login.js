@@ -11,7 +11,6 @@ async function hashPassword(password, salt) {
 
 async function verifyPassword(password, storedHash) {
   if (!storedHash) return false;
-  // bcrypt는 지원 불가
   if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) return false;
   const colonIdx = storedHash.indexOf(':');
   if (colonIdx === -1) return false;
@@ -33,7 +32,8 @@ export async function onRequestPost({ request, env }) {
   const valid = await verifyPassword(pw, user.pw_hash);
   if (!valid) return Response.json({ error: '아이디 또는 비밀번호가 틀렸습니다' }, { status: 401 });
 
-  await supabase.from('users').update({ online: true }).eq('username', id);
+  // 로그인 시 last_seen 갱신 (온라인 감지용)
+  await supabase.from('users').update({ online: true, last_seen: new Date().toISOString() }).eq('username', id);
 
   const token = await jwt.sign(
     { id: user.id, username: id, role: user.role, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7 },
