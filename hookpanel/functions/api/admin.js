@@ -39,9 +39,10 @@ export async function onRequest({ request, env }) {
   }
 
   if (method === 'GET' && path === '/stats') {
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const [{ count: totalUsers }, { count: onlineUsers }, { count: totalHooks }, { count: totalLogs }] = await Promise.all([
       supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('online', true),
+      supabase.from('users').select('*', { count: 'exact', head: true }).gte('last_seen', fiveMinutesAgo),
       supabase.from('webhooks').select('*', { count: 'exact', head: true }),
       supabase.from('logs').select('*', { count: 'exact', head: true })
     ]);
