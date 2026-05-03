@@ -1035,7 +1035,6 @@ async function toggleRole(username, currentRole) {
 
 // ── 탭 전환 ──
 function switchTab(tab) {
-  document.querySelectorAll('.sidebar-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + tab).style.display = 'block';
   var nav = document.getElementById('nav-' + tab);
   if (nav) nav.classList.add('active');
