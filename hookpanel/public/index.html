@@ -223,10 +223,7 @@
         <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
         <span class="label">슬래시 메시지</span>
       </div>
-      <div class="sidebar-item" onclick="switchTab('templates')" id="nav-templates">
-        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-        <span class="label">템플릿</span>
-      </div>
+
       <div class="sidebar-item" onclick="switchTab('logs')" id="nav-logs">
         <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
         <span class="label">발송 로그</span>
@@ -425,34 +422,13 @@
                 <div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>
               </div>
             </div>
-            <div style="margin-top:12px;padding:12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border)">
-              <div style="font-size:11px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">JSON 미리보기</div>
-              <pre id="slash-json-preview" style="font-size:11px;color:var(--text2);overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto"></pre>
-            </div>
+
           </div>
         </div>
       </div>
     </div>
 
-    <!-- TEMPLATES -->
-    <div id="tab-templates" class="tab-content" style="display:none">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
-        <div><div class="section-title">템플릿</div><div class="section-sub">임베드 템플릿을 만들고 공유하세요</div></div>
-        <button class="btn btn-primary" onclick="openTemplateModal()">+ 템플릿 만들기</button>
-      </div>
 
-      <!-- 탭: 공개/내것 -->
-      <div style="display:flex;gap:8px;margin-bottom:20px">
-        <button class="btn btn-outline btn-sm" id="tpl-tab-public" onclick="switchTemplateTab('public')" style="border-color:var(--accent);color:var(--accent)">🌐 공개 템플릿</button>
-        <button class="btn btn-outline btn-sm" id="tpl-tab-mine" onclick="switchTemplateTab('mine')">👤 내 템플릿</button>
-      </div>
-
-      <div id="template-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
-        <div style="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1">템플릿을 불러오는 중...</div>
-      </div>
-    </div>
-
-    <!-- TEMPLATE MODAL -->
     <!-- LOGS -->
     <div id="tab-logs" class="tab-content" style="display:none">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
@@ -1069,6 +1045,31 @@ async function toggleRole(username, currentRole) {
   updateAdmin();
 }
 
+async function adminDeleteUser(username) {
+  if (!confirm(username + '님의 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+  var { ok, data } = await apiFetch('/admin/users', {
+    method: 'DELETE',
+    headers: authHeaders(),
+    body: JSON.stringify({ targetUsername: username })
+  });
+  if (!ok) { notify(data.error || '삭제 실패', 'error'); return; }
+  notify(username + '님의 계정이 삭제되었습니다', 'info');
+  updateAdmin();
+}
+
+async function adminChangePw(username) {
+  var newPw = prompt(username + '님의 새 비밀번호를 입력하세요 (6자 이상):');
+  if (!newPw) return;
+  if (newPw.length < 6) { notify('비밀번호는 6자 이상이어야 합니다', 'error'); return; }
+  var { ok, data } = await apiFetch('/admin/users/password', {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ targetUsername: username, newPassword: newPw })
+  });
+  if (!ok) { notify(data.error || '변경 실패', 'error'); return; }
+  notify(username + '님의 비밀번호가 변경되었습니다', 'success');
+}
+
 // ── 탭 전환 ──
 function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(function(el) { el.style.display = 'none'; });
@@ -1081,14 +1082,24 @@ function switchTab(tab) {
   if (tab === 'logs') loadLogs();
   if (tab === 'webhooks') renderWebhooks();
   if (tab === 'slash') updateSlashPreview();
-  if (tab === 'templates') loadTemplates();
+
 }
 
 async function updateDash() {
   document.getElementById('stat-hooks').textContent = webhooks.length;
   document.getElementById('stat-sent').textContent = logs.length;
 
-  // 어드민이면 전체 통계도 표시
+  // 공개 통계 (모든 유저)
+  try {
+    var res = await fetch('/api/public-stats');
+    if (res.ok) {
+      var ps = await res.json();
+      document.getElementById('stat-users').textContent = ps.totalUsers || 0;
+      document.getElementById('stat-online').textContent = ps.onlineUsers || 0;
+    }
+  } catch(e) {}
+
+  // 어드민이면 정확한 전체 통계도 표시
   if (currentUser && currentUser.role === 'admin') {
     var { ok, data } = await apiFetch('/admin/stats', { headers: authHeaders() });
     if (ok) {
@@ -1248,8 +1259,7 @@ function updateSlashPreview() {
     container.innerHTML = '<div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>';
   }
 
-  // JSON 미리보기
-  document.getElementById('slash-json-preview').textContent = JSON.stringify(payload, null, 2);
+
 }
 
 async function sendSlashMessage() {
@@ -1370,174 +1380,6 @@ function updatePreview() {
   }
 }
 
-// ── 템플릿 시스템 ──
-var currentTplTab = 'public';
-var editingTemplateId = null;
-
-function switchTemplateTab(tab) {
-  currentTplTab = tab;
-  document.getElementById('tpl-tab-public').style.borderColor = tab === 'public' ? 'var(--accent)' : '';
-  document.getElementById('tpl-tab-public').style.color = tab === 'public' ? 'var(--accent)' : '';
-  document.getElementById('tpl-tab-mine').style.borderColor = tab === 'mine' ? 'var(--accent)' : '';
-  document.getElementById('tpl-tab-mine').style.color = tab === 'mine' ? 'var(--accent)' : '';
-  loadTemplates();
-}
-
-async function loadTemplates() {
-  var grid = document.getElementById('template-grid');
-  grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1"><div class="spinner" style="margin:0 auto 12px"></div>불러오는 중...</div>';
-  var url = API + '/templates' + (currentTplTab === 'mine' ? '?mine=1' : '');
-  var { ok, data } = await apiFetch(url.replace(API, ''), { headers: authHeaders() });
-  if (!ok) { grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red);grid-column:1/-1">불러오기 실패</div>'; return; }
-  var templates = data.templates || [];
-  if (!templates.length) {
-    grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1">' + (currentTplTab === 'mine' ? '내 템플릿이 없습니다. 만들어보세요!' : '공개 템플릿이 없습니다.') + '</div>';
-    return;
-  }
-  grid.innerHTML = templates.map(function(t) {
-    var embedColor = t.embed && t.embed.color ? '#' + t.embed.color.toString(16).padStart(6,'0') : '#5865f2';
-    return '<div class="card" style="padding:0;overflow:hidden;cursor:pointer;transition:transform .2s;border:1px solid var(--border)" onmouseover="this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.transform=\'\'">'
-      + '<div style="height:4px;background:' + embedColor + '"></div>'
-      + '<div style="padding:16px">'
-      + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'
-      + '<div style="font-weight:600;font-size:15px;color:var(--text)">' + t.name + '</div>'
-      + '<span class="tag ' + (t.is_public ? 'tag-online' : 'tag-offline') + '" style="font-size:10px">' + (t.is_public ? '🌐 공개' : '🔒 비공개') + '</span>'
-      + '</div>'
-      + (t.description ? '<div style="font-size:12px;color:var(--text3);margin-bottom:10px">' + t.description + '</div>' : '')
-      + '<div style="font-size:11px;color:var(--text3);margin-bottom:12px">by ' + t.created_by + ' · 사용 ' + (t.use_count || 0) + '회</div>'
-      + '<div style="display:flex;gap:6px">'
-      + '<button class="btn btn-primary btn-sm" style="flex:1;justify-content:center" onclick="applyTemplate(' + JSON.stringify(t).replace(/"/g,'&quot;') + ')">적용</button>'
-      + (currentTplTab === 'mine' ? '<button class="btn btn-outline btn-sm" onclick="openTemplateModal(' + JSON.stringify(t).replace(/"/g,'&quot;') + ')">수정</button><button class="btn btn-danger btn-sm" onclick="deleteTemplate(' + t.id + ')">삭제</button>' : '')
-      + '</div></div></div>';
-  }).join('');
-}
-
-function openTemplateModal(tpl) {
-  editingTemplateId = tpl ? tpl.id : null;
-  document.getElementById('tpl-modal-title').textContent = tpl ? '템플릿 수정' : '템플릿 만들기';
-  document.getElementById('tpl-edit-id').value = tpl ? tpl.id : '';
-  document.getElementById('tpl-name').value = tpl ? tpl.name : '';
-  document.getElementById('tpl-desc').value = tpl ? (tpl.description || '') : '';
-  document.getElementById('tpl-botname').value = tpl ? (tpl.username || '') : '';
-  document.getElementById('tpl-avatar').value = tpl ? (tpl.avatar_url || '') : '';
-  document.getElementById('tpl-content').value = tpl ? (tpl.content || '') : '';
-  document.getElementById('tpl-vis-private').checked = true;
-  document.getElementById('tpl-vis-public').checked = tpl ? tpl.is_public : false;
-  document.getElementById('tpl-vis-private').checked = tpl ? !tpl.is_public : true;
-  if (tpl && tpl.embed) {
-    document.getElementById('tpl-embed-title').value = tpl.embed.title || '';
-    document.getElementById('tpl-embed-desc').value = tpl.embed.description || '';
-    document.getElementById('tpl-embed-color').value = tpl.embed.color ? '#' + tpl.embed.color.toString(16).padStart(6,'0') : '#5865f2';
-    document.getElementById('tpl-embed-author').value = tpl.embed.author ? tpl.embed.author.name : '';
-    document.getElementById('tpl-embed-footer').value = tpl.embed.footer ? tpl.embed.footer.text : '';
-    document.getElementById('tpl-embed-thumb').value = tpl.embed.thumbnail ? tpl.embed.thumbnail.url : '';
-    document.getElementById('tpl-embed-img').value = tpl.embed.image ? tpl.embed.image.url : '';
-  } else {
-    ['tpl-embed-title','tpl-embed-desc','tpl-embed-author','tpl-embed-footer','tpl-embed-thumb','tpl-embed-img'].forEach(function(id) { document.getElementById(id).value = ''; });
-    document.getElementById('tpl-embed-color').value = '#5865f2';
-  }
-  updateTplPreview();
-  document.getElementById('modal-template').style.display = 'block';
-}
-
-function updateTplVisLabel() {
-  var isPub = document.getElementById('tpl-vis-public').checked;
-  document.getElementById('tpl-public-label').style.borderColor = isPub ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('tpl-public-label').style.background = isPub ? 'rgba(88,101,242,.1)' : '';
-  document.getElementById('tpl-private-label').style.borderColor = !isPub ? 'var(--accent)' : 'var(--border)';
-  document.getElementById('tpl-private-label').style.background = !isPub ? 'rgba(88,101,242,.1)' : '';
-}
-
-function buildTplEmbed() {
-  var title = document.getElementById('tpl-embed-title').value;
-  var desc = document.getElementById('tpl-embed-desc').value;
-  var author = document.getElementById('tpl-embed-author').value;
-  var footer = document.getElementById('tpl-embed-footer').value;
-  var thumb = document.getElementById('tpl-embed-thumb').value;
-  var img = document.getElementById('tpl-embed-img').value;
-  var color = parseInt(document.getElementById('tpl-embed-color').value.replace('#',''), 16);
-  if (!title && !desc && !author && !footer && !thumb && !img) return null;
-  var embed = { color };
-  if (title) embed.title = title;
-  if (desc) embed.description = desc;
-  if (author) embed.author = { name: author };
-  if (footer) embed.footer = { text: footer };
-  if (thumb) embed.thumbnail = { url: thumb };
-  if (img) embed.image = { url: img };
-  return embed;
-}
-
-function updateTplPreview() {
-  var botName = document.getElementById('tpl-botname').value || 'WebhookBot';
-  var content = document.getElementById('tpl-content').value;
-  var embed = buildTplEmbed();
-  var colorHex = document.getElementById('tpl-embed-color').value;
-  var html = '<div style="display:flex;gap:10px"><div class="avatar" style="width:32px;height:32px;font-size:12px">' + botName.charAt(0).toUpperCase() + '</div><div style="flex:1">';
-  html += '<div style="color:#fff;font-weight:600;font-size:13px;margin-bottom:3px">' + botName + ' <span style="background:#5865f2;color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">BOT</span></div>';
-  if (content) html += '<div style="color:#dcddde;font-size:13px;margin-bottom:4px">' + content.replace(/\n/g,'<br>') + '</div>';
-  if (embed) {
-    html += '<div style="background:#2f3136;border-left:3px solid ' + colorHex + ';border-radius:0 4px 4px 0;padding:10px">';
-    if (embed.author) html += '<div style="font-size:11px;color:#dcddde;font-weight:600;margin-bottom:4px">' + embed.author.name + '</div>';
-    if (embed.title) html += '<div style="color:#fff;font-weight:600;font-size:14px;margin-bottom:4px">' + embed.title + '</div>';
-    if (embed.description) html += '<div style="color:#dcddde;font-size:12px">' + embed.description.replace(/\n/g,'<br>') + '</div>';
-    if (embed.footer) html += '<div style="font-size:10px;color:#72767d;margin-top:6px">' + embed.footer.text + '</div>';
-    html += '</div>';
-  }
-  html += '</div></div>';
-  document.getElementById('tpl-preview').innerHTML = (content || embed) ? html : '<div style="text-align:center;color:#72767d;font-size:12px;padding:10px">내용을 입력하면 미리보기가 표시됩니다</div>';
-}
-
-async function saveTemplate() {
-  var name = document.getElementById('tpl-name').value.trim();
-  if (!name) { notify('템플릿 이름을 입력해주세요', 'error'); return; }
-  var isPublic = document.getElementById('tpl-vis-public').checked;
-  var embed = buildTplEmbed();
-  var body = {
-    name, description: document.getElementById('tpl-desc').value,
-    is_public: isPublic, username: document.getElementById('tpl-botname').value,
-    avatar_url: document.getElementById('tpl-avatar').value,
-    content: document.getElementById('tpl-content').value,
-    embed
-  };
-  var editId = document.getElementById('tpl-edit-id').value;
-  if (editId) body.id = editId;
-
-  var { ok, data } = await apiFetch('/templates', {
-    method: editId ? 'PUT' : 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (!ok) { notify(data.error || '저장 실패', 'error'); return; }
-  notify('템플릿이 저장되었습니다!', 'success');
-  closeModal('modal-template');
-  if (currentTplTab === 'mine') loadTemplates();
-}
-
-async function deleteTemplate(id) {
-  if (!confirm('템플릿을 삭제하시겠습니까?')) return;
-  var { ok } = await apiFetch('/templates', { method: 'DELETE', headers: authHeaders(), body: JSON.stringify({ id }) });
-  if (ok) { notify('삭제되었습니다', 'info'); loadTemplates(); }
-  else notify('삭제 실패', 'error');
-}
-
-function applyTemplate(tpl) {
-  // 슬래시 메시지 탭으로 이동하면서 적용
-  switchTab('slash');
-  if (tpl.username) document.getElementById('slash-username').value = tpl.username;
-  if (tpl.avatar_url) document.getElementById('slash-avatar').value = tpl.avatar_url;
-  if (tpl.content) document.getElementById('slash-content').value = tpl.content;
-  if (tpl.embed) {
-    var c = tpl.embed.color ? '#' + tpl.embed.color.toString(16).padStart(6,'0') : '#5865f2';
-    document.getElementById('slash-color').value = c;
-    document.getElementById('slash-title').value = tpl.embed.title || '';
-    document.getElementById('slash-desc').value = tpl.embed.description || '';
-    document.getElementById('slash-author').value = tpl.embed.author ? tpl.embed.author.name : '';
-    document.getElementById('slash-author-icon').value = tpl.embed.author ? (tpl.embed.author.icon_url || '') : '';
-    document.getElementById('slash-footer').value = tpl.embed.footer ? tpl.embed.footer.text : '';
-    document.getElementById('slash-footer-icon').value = tpl.embed.footer ? (tpl.embed.footer.icon_url || '') : '';
-    document.getElementById('slash-thumb').value = tpl.embed.thumbnail ? tpl.embed.thumbnail.url : '';
-    document.getElementById('slash-img').value = tpl.embed.image ? tpl.embed.image.url : '';
-  }
   // 사용 횟수 증가
   apiFetch('/templates', { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ id: tpl.id }) });
   updateSlashPreview();
