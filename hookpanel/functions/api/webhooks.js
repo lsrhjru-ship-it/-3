@@ -19,6 +19,9 @@ export async function onRequest({ request, env }) {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
   const method = request.method;
 
+  // last_seen 갱신 (실시간 온라인 감지용)
+  await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('username', user.username);
+
   if (method === 'GET') {
     const { data } = await supabase.from('webhooks')
       .select('id, name, channel, date, created_by')
