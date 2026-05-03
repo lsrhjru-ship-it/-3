@@ -1033,9 +1033,8 @@ async function toggleRole(username, currentRole) {
   updateAdmin();
 }
 
-// ── 탭 전환 ──
 function switchTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(function(el) { el.style.display = 'none'; });
+  document.querySelectorAll('.main-content .tab-content').forEach(function(el) { el.style.display = 'none'; });
   document.querySelectorAll('.sidebar-item').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('tab-' + tab).style.display = 'block';
   var nav = document.getElementById('nav-' + tab);
@@ -1051,7 +1050,7 @@ async function updateDash() {
   document.getElementById('stat-hooks').textContent = webhooks.length;
   document.getElementById('stat-sent').textContent = logs.length;
 
-    try {
+try {
     var res = await fetch('/api/public-stats');
     if (res.ok) {
       var ps = await res.json();
@@ -1060,14 +1059,8 @@ async function updateDash() {
     }
   } catch(e) {}
 
-  if (currentUser && currentUser.role === 'admin') {
-    var r = await apiFetch('/admin/stats', { headers: authHeaders() });
-    if (r.ok) {
-      document.getElementById('stat-users').textContent = r.data.totalUsers || 0;
-      document.getElementById('stat-online').textContent = r.data.onlineUsers || 0;
-    }
-  }
 
+ 
   var dashLogs = document.getElementById('dash-logs');
   var recent = logs.slice(-5).reverse();
   dashLogs.innerHTML = recent.length ? recent.map(function(l) {
