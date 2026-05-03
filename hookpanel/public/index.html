@@ -192,6 +192,18 @@
       </a>
     </div>
 
+    <!-- 업데이트 로그 -->
+    <div style="margin-top:20px;max-width:420px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05zM11 13H9V7h2v6zm0 4H9v-2h2v2z"/></svg>
+        <span style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">업데이트 로그</span>
+        <span id="login-latest-version" style="font-size:11px;background:rgba(88,101,242,.2);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:600"></span>
+      </div>
+      <div id="login-changelog" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">불러오는 중...</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -262,7 +274,7 @@
         <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">웹훅 수</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-hooks">0</div></div>
         <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">발송 완료</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-sent">0</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" class="grid-2">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" class="grid-2">
         <div class="card">
           <div style="font-weight:600;margin-bottom:16px">최근 발송 로그</div>
           <div id="dash-logs"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">아직 발송 기록이 없습니다</div></div>
@@ -270,6 +282,16 @@
         <div class="card">
           <div style="font-weight:600;margin-bottom:16px">내 웹훅 현황</div>
           <div id="dash-webhooks"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">등록된 웹훅이 없습니다</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05z"/></svg>
+          <span style="font-weight:600">업데이트 로그</span>
+          <span id="dash-latest-version" style="font-size:11px;background:rgba(88,101,242,.2);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:600"></span>
+        </div>
+        <div id="dash-changelog" style="display:flex;flex-direction:column;gap:10px">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">불러오는 중...</div>
         </div>
       </div>
     </div>
@@ -1115,6 +1137,9 @@ async function updateDash() {
     return '<div class="discord-msg"><div style="font-size:12px;color:var(--text3);margin-bottom:2px">' + l.time + ' · ' + l.hook_name + '</div>'
       + '<div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.message + '</div></div>';
   }).join('') : '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">아직 발송 기록이 없습니다</div>';
+  // 업데이트 로그 새로고침
+  loadChangelogs();
+
   // 웹훅 현황
   var dashWebhooks = document.getElementById('dash-webhooks');
   dashWebhooks.innerHTML = webhooks.length ? webhooks.map(function(w) {
@@ -1330,6 +1355,60 @@ function showRegister() { showStep('register'); }
 function showLogin() { showStep('login'); }
 function showAddWebhook() { document.getElementById('modal-webhook').style.display = 'block'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── 업데이트 로그 ──
+var changelogTypeMap = { feature: { label: '신기능', color: 'var(--green)', bg: 'rgba(87,242,135,.1)' }, fix: { label: '버그픽스', color: 'var(--red)', bg: 'rgba(237,66,69,.1)' }, update: { label: '업데이트', color: 'var(--accent)', bg: 'rgba(88,101,242,.1)' } };
+
+function renderChangelogItem(c) {
+  var t = changelogTypeMap[c.type] || changelogTypeMap.update;
+  var date = new Date(c.created_at).toLocaleDateString('ko', { month: 'long', day: 'numeric' });
+  return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'
+    + '<div style="flex-shrink:0;text-align:center">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif">' + c.version + '</div>'
+    + '<div style="font-size:10px;color:var(--text3)">' + date + '</div>'
+    + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+    + '<span style="font-size:10px;padding:1px 6px;border-radius:100px;background:' + t.bg + ';color:' + t.color + ';font-weight:600">' + t.label + '</span>'
+    + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + c.title + '</span>'
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text3);line-height:1.5">' + c.content.replace(/\n/g, '<br>') + '</div>'
+    + '</div></div>';
+}
+
+async function loadChangelogs() {
+  try {
+    var res = await fetch('/api/changelog');
+    if (!res.ok) return;
+    var data = await res.json();
+    var logs = data.changelogs || [];
+
+    // 로그인 페이지
+    var loginEl = document.getElementById('login-changelog');
+    var loginVer = document.getElementById('login-latest-version');
+    if (loginEl) {
+      if (logs.length) {
+        if (loginVer) loginVer.textContent = logs[0].version;
+        loginEl.innerHTML = logs.slice(0, 5).map(renderChangelogItem).join('');
+      } else {
+        loginEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
+      }
+    }
+
+    // 대시보드
+    var dashEl = document.getElementById('dash-changelog');
+    var dashVer = document.getElementById('dash-latest-version');
+    if (dashEl) {
+      if (logs.length) {
+        if (dashVer) dashVer.textContent = logs[0].version;
+        dashEl.innerHTML = logs.map(renderChangelogItem).join('');
+      } else {
+        dashEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
+      }
+    }
+  } catch(e) {}
+}
+loadChangelogs();
 
 // ── 로그인 페이지 온라인 유저 수 ──
 async function fetchLoginOnlineCount() {
