@@ -2,6 +2,9 @@
   "name": "hookpanel",
   "version": "4.0.0",
   "description": "Discord 웹훅 관리 패널 - Cloudflare Pages",
+  "scripts": {
+    "build": "npm install"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "@tsndr/cloudflare-worker-jwt": "^2.5.0",
