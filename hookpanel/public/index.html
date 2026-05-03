@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HookPanel - Discord 웹훅 관리</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -174,7 +173,6 @@
       </div>
     </div>
 
-    <!-- 온라인 유저 수 -->
     <div style="text-align:center;margin-top:20px">
       <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(87,242,135,.08);border:1px solid rgba(87,242,135,.2);border-radius:100px;padding:6px 16px">
         <span class="online-dot"></span>
@@ -182,7 +180,6 @@
       </div>
     </div>
 
-    <!-- Discord 서버 가기 -->
     <div style="text-align:center;margin-top:12px">
       <a href="https://discord.gg/mDN69g9xb8" target="_blank"
         style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#5865f2;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:background .2s"
@@ -192,7 +189,6 @@
       </a>
     </div>
 
-    <!-- 업데이트 로그 -->
     <div style="margin-top:20px;max-width:420px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05zM11 13H9V7h2v6zm0 4H9v-2h2v2z"/></svg>
@@ -235,7 +231,6 @@
         <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
         <span class="label">슬래시 메시지</span>
       </div>
-
       <div class="sidebar-item" onclick="switchTab('logs')" id="nav-logs">
         <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
         <span class="label">발송 로그</span>
@@ -444,12 +439,10 @@
                 <div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
     </div>
-
 
     <!-- LOGS -->
     <div id="tab-logs" class="tab-content" style="display:none">
@@ -496,81 +489,6 @@
 </div>
 
 <!-- Webhook Modal -->
-<!-- Template Modal -->
-<div id="modal-template" style="display:none">
-  <div class="modal-overlay" onclick="if(event.target===this)closeModal('modal-template')">
-    <div class="modal" style="width:600px;max-width:96vw">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-        <h3 style="font-family:'Syne',sans-serif;font-size:18px" id="tpl-modal-title">템플릿 만들기</h3>
-        <button onclick="closeModal('modal-template')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px">✕</button>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div><label>템플릿 이름 *</label><input type="text" id="tpl-name" placeholder="예: 공지 템플릿"/></div>
-        <div><label>설명</label><input type="text" id="tpl-desc" placeholder="간단한 설명"/></div>
-      </div>
-      <div style="margin-bottom:12px">
-        <label>공개 여부</label>
-        <div style="display:flex;gap:10px">
-          <label style="display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;cursor:pointer;margin:0;padding:8px 14px;border:1px solid var(--border);border-radius:8px" id="tpl-public-label">
-            <input type="radio" name="tpl-visibility" value="public" id="tpl-vis-public" style="width:auto;accent-color:var(--accent)" onchange="updateTplVisLabel()"> 🌐 공개
-          </label>
-          <label style="display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;cursor:pointer;margin:0;padding:8px 14px;border:1px solid var(--accent);border-radius:8px;background:rgba(88,101,242,.1)" id="tpl-private-label">
-            <input type="radio" name="tpl-visibility" value="private" id="tpl-vis-private" checked style="width:auto;accent-color:var(--accent)" onchange="updateTplVisLabel()"> 🔒 비공개
-          </label>
-        </div>
-      </div>
-
-      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
-        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">메시지 내용</div>
-        <div style="margin-bottom:10px"><label>봇 이름</label><input type="text" id="tpl-botname" placeholder="WebhookBot" oninput="updateTplPreview()"/></div>
-        <div style="margin-bottom:10px"><label>봇 아바타 URL</label><input type="text" id="tpl-avatar" placeholder="https://..." oninput="updateTplPreview()"/></div>
-        <div><label>메시지 내용</label><textarea id="tpl-content" placeholder="메시지..." oninput="updateTplPreview()"></textarea></div>
-      </div>
-
-      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
-        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">임베드 설정</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div><label>제목</label><input type="text" id="tpl-embed-title" placeholder="임베드 제목" oninput="updateTplPreview()"/></div>
-          <div>
-            <label>색상</label>
-            <div style="display:flex;gap:6px;align-items:center">
-              <input type="color" id="tpl-embed-color" value="#5865f2" style="width:40px;height:36px;padding:3px;cursor:pointer" oninput="updateTplPreview()">
-              <div style="display:flex;gap:4px">
-                <div onclick="document.getElementById('tpl-embed-color').value='#5865f2';updateTplPreview()" style="width:20px;height:20px;border-radius:50%;background:#5865f2;cursor:pointer"></div>
-                <div onclick="document.getElementById('tpl-embed-color').value='#57f287';updateTplPreview()" style="width:20px;height:20px;border-radius:50%;background:#57f287;cursor:pointer"></div>
-                <div onclick="document.getElementById('tpl-embed-color').value='#fee75c';updateTplPreview()" style="width:20px;height:20px;border-radius:50%;background:#fee75c;cursor:pointer"></div>
-                <div onclick="document.getElementById('tpl-embed-color').value='#ed4245';updateTplPreview()" style="width:20px;height:20px;border-radius:50%;background:#ed4245;cursor:pointer"></div>
-                <div onclick="document.getElementById('tpl-embed-color').value='#eb459e';updateTplPreview()" style="width:20px;height:20px;border-radius:50%;background:#eb459e;cursor:pointer"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div style="margin-bottom:10px"><label>설명</label><textarea id="tpl-embed-desc" placeholder="임베드 설명..." oninput="updateTplPreview()"></textarea></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          <div><label>Author</label><input type="text" id="tpl-embed-author" placeholder="작성자명" oninput="updateTplPreview()"/></div>
-          <div><label>푸터</label><input type="text" id="tpl-embed-footer" placeholder="푸터 텍스트" oninput="updateTplPreview()"/></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div><label>썸네일 URL</label><input type="text" id="tpl-embed-thumb" placeholder="https://..." oninput="updateTplPreview()"/></div>
-          <div><label>이미지 URL</label><input type="text" id="tpl-embed-img" placeholder="https://..." oninput="updateTplPreview()"/></div>
-        </div>
-      </div>
-
-      <!-- 미리보기 -->
-      <div style="background:#36393f;border-radius:8px;padding:14px;margin-bottom:16px">
-        <div style="font-size:11px;color:#72767d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">미리보기</div>
-        <div id="tpl-preview"></div>
-      </div>
-
-      <input type="hidden" id="tpl-edit-id" value="">
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-primary" onclick="saveTemplate()" style="flex:1;justify-content:center">저장</button>
-        <button class="btn btn-outline" onclick="closeModal('modal-template')">취소</button>
-      </div>
-    </div>
-  </div>
-</div>
 <div id="modal-webhook" style="display:none">
   <div class="modal-overlay" onclick="if(event.target===this)closeModal('modal-webhook')">
     <div class="modal">
@@ -586,6 +504,58 @@
   </div>
 </div>
 
+<!-- Template Modal -->
+<div id="modal-template" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal('modal-template')">
+    <div class="modal" style="width:600px;max-width:96vw">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px" id="tpl-modal-title">템플릿 만들기</h3>
+        <button onclick="closeModal('modal-template')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label>템플릿 이름 *</label><input type="text" id="tpl-name" placeholder="예: 공지 템플릿"/></div>
+        <div><label>설명</label><input type="text" id="tpl-desc" placeholder="간단한 설명"/></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">메시지 내용</div>
+        <div style="margin-bottom:10px"><label>봇 이름</label><input type="text" id="tpl-botname" placeholder="WebhookBot" oninput="updateTplPreview()"/></div>
+        <div style="margin-bottom:10px"><label>봇 아바타 URL</label><input type="text" id="tpl-avatar" placeholder="https://..." oninput="updateTplPreview()"/></div>
+        <div><label>메시지 내용</label><textarea id="tpl-content" placeholder="메시지..." oninput="updateTplPreview()"></textarea></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">임베드 설정</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label>제목</label><input type="text" id="tpl-embed-title" placeholder="임베드 제목" oninput="updateTplPreview()"/></div>
+          <div>
+            <label>색상</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" id="tpl-embed-color" value="#5865f2" style="width:40px;height:36px;padding:3px;cursor:pointer" oninput="updateTplPreview()">
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px"><label>설명</label><textarea id="tpl-embed-desc" placeholder="임베드 설명..." oninput="updateTplPreview()"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label>Author</label><input type="text" id="tpl-embed-author" placeholder="작성자명" oninput="updateTplPreview()"/></div>
+          <div><label>푸터</label><input type="text" id="tpl-embed-footer" placeholder="푸터 텍스트" oninput="updateTplPreview()"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>썸네일 URL</label><input type="text" id="tpl-embed-thumb" placeholder="https://..." oninput="updateTplPreview()"/></div>
+          <div><label>이미지 URL</label><input type="text" id="tpl-embed-img" placeholder="https://..." oninput="updateTplPreview()"/></div>
+        </div>
+      </div>
+      <div style="background:#36393f;border-radius:8px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;color:#72767d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">미리보기</div>
+        <div id="tpl-preview"></div>
+      </div>
+      <input type="hidden" id="tpl-edit-id" value="">
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveTemplate()" style="flex:1;justify-content:center">저장</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-template')">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="notif-container"></div>
 
 <script>
@@ -594,21 +564,17 @@
 // 모든 민감한 처리는 서버(Netlify Functions)에서 수행
 // =====================================================
 
-// ── 소셜 로그인 공개 Client ID 설정 ──
-// Google Client ID: Google Cloud Console > OAuth 2.0 > 클라이언트 ID
 window.__GOOGLE_CLIENT_ID__ = '394083144235-v568m0t4f6rs5ce432ap0sj0sdo3qcec.apps.googleusercontent.com';
-// Discord Client ID: Discord Developer Portal > Applications > 앱 선택 > OAuth2
 window.__DISCORD_CLIENT_ID__ = '1500053167402909756';
 window.__DISCORD_REDIRECT__ = 'https://hookpanel.pages.dev/';
 
 var API = '/api';
 var currentUser = null;
-var webhooks = [];  // URL 없이 {id, name, channel, date}만 저장
+var webhooks = [];
 var logs = [];
 var otpEmail = '';
 var otpTimer = null;
 
-// ── 인증 헬퍼 (localStorage: 브라우저 닫아도 7일 유지) ──
 function getToken() { return localStorage.getItem('hp_token'); }
 function setToken(t) { localStorage.setItem('hp_token', t); }
 function clearToken() { localStorage.removeItem('hp_token'); }
@@ -619,7 +585,7 @@ function authHeaders() {
 
 async function apiFetch(path, options) {
   const res = await fetch(API + path, options);
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json().catch(function() { return {}; });
   return { ok: res.ok, status: res.status, data };
 }
 
@@ -643,19 +609,19 @@ async function doLogin() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> 로그인 중...';
 
-  var { ok, data } = await apiFetch('/login', {
+  var r = await apiFetch('/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, pw })
+    body: JSON.stringify({ id: id, pw: pw })
   });
 
   btn.disabled = false;
   btn.innerHTML = '로그인';
 
-  if (!ok) { notify(data.error || '로그인 실패', 'error'); return; }
+  if (!r.ok) { notify(r.data.error || '로그인 실패', 'error'); return; }
 
-  setToken(data.token);
-  currentUser = data.user;
+  setToken(r.data.token);
+  currentUser = r.data.user;
   notify('로그인되었습니다. 환영합니다!', 'success');
   enterApp();
 }
@@ -675,16 +641,16 @@ async function doRegister() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> 발송 중...';
 
-  var { ok, data } = await apiFetch('/register', {
+  var r = await apiFetch('/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'send_otp', id, email, pw })
+    body: JSON.stringify({ action: 'send_otp', id: id, email: email, pw: pw })
   });
 
   btn.disabled = false;
   btn.innerHTML = '인증코드 발송 →';
 
-  if (!ok) { notify(data.error || '발송 실패', 'error'); return; }
+  if (!r.ok) { notify(r.data.error || '발송 실패', 'error'); return; }
 
   otpEmail = email;
   document.getElementById('otp-email-display').textContent = email;
@@ -708,17 +674,17 @@ async function verifyOTP() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> 확인 중...';
 
-  var { ok, data } = await apiFetch('/register', {
+  var r = await apiFetch('/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'verify_otp', email: otpEmail, otp })
+    body: JSON.stringify({ action: 'verify_otp', email: otpEmail, otp: otp })
   });
 
   btn.disabled = false;
   btn.innerHTML = '인증 확인';
 
-  if (!ok) {
-    notify(data.error || '인증 실패', 'error');
+  if (!r.ok) {
+    notify(r.data.error || '인증 실패', 'error');
     var inputs = document.querySelectorAll('.otp-input');
     inputs.forEach(function(el) {
       el.style.borderColor = 'var(--red)';
@@ -728,17 +694,13 @@ async function verifyOTP() {
   }
 
   clearInterval(otpTimer);
-  setToken(data.token);
-  currentUser = data.user;
-  notify('이메일 인증 완료! 환영합니다 ' + data.user.username + '님 🎉', 'success');
+  setToken(r.data.token);
+  currentUser = r.data.user;
+  notify('이메일 인증 완료! 환영합니다 ' + r.data.user.username + '님 🎉', 'success');
   enterApp();
 }
 
 async function resendOTP() {
-  if (!otpEmail) return;
-  notify('코드를 재발송합니다...', 'info');
-  // 재발송은 다시 register send_otp 호출 (서버에서 새 코드 생성)
-  // 간단히 화면 되돌리기
   notify('회원가입 정보를 다시 입력해주세요', 'info');
   showStep('register');
 }
@@ -774,7 +736,6 @@ function otpKey(e, idx) {
 function triggerGoogleLogin() {
   if (window.google && google.accounts && google.accounts.oauth2) {
     var client = google.accounts.oauth2.initTokenClient({
-      // Google Client ID는 공개 값이므로 여기 있어도 됨 (OAuth redirect 검증은 서버에서)
       client_id: window.__GOOGLE_CLIENT_ID__ || '',
       scope: 'email profile openid',
       callback: function(tokenResponse) {
@@ -830,14 +791,14 @@ function fetchDiscordUser(token) {
 }
 
 async function handleSocialLogin(provider, info) {
-  var { ok, data } = await apiFetch('/social-login', {
+  var r = await apiFetch('/social-login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider, ...info })
+    body: JSON.stringify(Object.assign({ provider: provider }, info))
   });
-  if (!ok) { notify(data.error || '소셜 로그인 실패', 'error'); return; }
-  setToken(data.token);
-  currentUser = data.user;
+  if (!r.ok) { notify(r.data.error || '소셜 로그인 실패', 'error'); return; }
+  setToken(r.data.token);
+  currentUser = r.data.user;
   notify(provider === 'google' ? 'Google 계정으로 로그인되었습니다!' : 'Discord 계정으로 로그인되었습니다!', 'success');
   enterApp();
 }
@@ -863,14 +824,13 @@ async function enterApp() {
   } else {
     avatarEl.textContent = (u.displayName || u.username).charAt(0).toUpperCase();
   }
-  // 어드민 섹션은 서버에서 받은 role 기반으로만 표시
   if (u.role === 'admin') document.getElementById('admin-section').style.display = 'block';
   await loadWebhooks();
   await loadLogs();
   await updateDash();
 }
 
-// ── 세션 복원 (페이지 새로고침 / 브라우저 재시작 시) ──
+// ── 세션 복원 ──
 (function() {
   var token = localStorage.getItem('hp_token');
   if (!token) return;
@@ -896,11 +856,11 @@ function doLogout() {
   notify('로그아웃되었습니다', 'info');
 }
 
-// ── 웹훅 (URL은 서버에만 존재) ──
+// ── 웹훅 ──
 async function loadWebhooks() {
-  var { ok, data } = await apiFetch('/webhooks', { headers: authHeaders() });
-  if (!ok) return;
-  webhooks = data.webhooks || [];
+  var r = await apiFetch('/webhooks', { headers: authHeaders() });
+  if (!r.ok) return;
+  webhooks = r.data.webhooks || [];
   document.getElementById('webhook-count').textContent = webhooks.length;
   renderWebhooks();
   updateSendHookList();
@@ -912,7 +872,7 @@ function renderWebhooks() {
   tb.innerHTML = webhooks.length ? webhooks.map(function(w) {
     return '<tr><td><strong style="color:var(--text)">' + w.name + '</strong></td>'
       + '<td style="color:var(--accent2)">' + w.channel + '</td>'
-      + '<td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">••••••••••••••••••••</code></td>'  // URL 마스킹
+      + '<td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">••••••••••••••••••••</code></td>'
       + '<td>' + w.date + '</td><td><span class="tag tag-online">활성</span></td>'
       + '<td><button class="btn btn-sm btn-danger" onclick="deleteHook(\'' + w.id + '\')">삭제</button></td></tr>';
   }).join('') : '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">등록된 웹훅이 없습니다</td></tr>';
@@ -924,31 +884,31 @@ async function addWebhook() {
   var url = document.getElementById('wh-url').value.trim();
   if (!name || !url) { notify('이름과 URL은 필수입니다', 'error'); return; }
 
-  var { ok, data } = await apiFetch('/webhooks', {
+  var r = await apiFetch('/webhooks', {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ name, channel: ch, url })
+    body: JSON.stringify({ name: name, channel: ch, url: url })
   });
 
-  if (!ok) { notify(data.error || '추가 실패', 'error'); return; }
+  if (!r.ok) { notify(r.data.error || '추가 실패', 'error'); return; }
 
   notify('웹훅이 추가되었습니다', 'success');
   closeModal('modal-webhook');
   document.getElementById('wh-name').value = '';
   document.getElementById('wh-channel').value = '';
-  document.getElementById('wh-url').value = '';  // URL 입력창도 즉시 클리어
+  document.getElementById('wh-url').value = '';
   await loadWebhooks();
   updateDash();
 }
 
 async function deleteHook(id) {
   if (!confirm('웹훅을 삭제하시겠습니까?')) return;
-  var { ok, data } = await apiFetch('/webhooks', {
+  var r = await apiFetch('/webhooks', {
     method: 'DELETE',
     headers: authHeaders(),
-    body: JSON.stringify({ id })
+    body: JSON.stringify({ id: id })
   });
-  if (!ok) { notify(data.error || '삭제 실패', 'error'); return; }
+  if (!r.ok) { notify(r.data.error || '삭제 실패', 'error'); return; }
   notify('삭제되었습니다', 'info');
   await loadWebhooks();
   updateDash();
@@ -960,7 +920,7 @@ function updateSendHookList() {
     + webhooks.map(function(w) { return '<option value="' + w.id + '">' + w.name + ' (' + w.channel + ')</option>'; }).join('');
 }
 
-// ── 메시지 발송 (URL 서버에서 처리) ──
+// ── 메시지 발송 ──
 async function sendMessage() {
   var hookId = document.getElementById('send-hook').value;
   if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
@@ -976,40 +936,46 @@ async function sendMessage() {
   if (avatar) payload.avatar_url = avatar;
   if (useEmbed) {
     var color = parseInt(document.getElementById('embed-color').value.replace('#', ''), 16);
-    var embed = { color };
-    var t = document.getElementById('embed-title').value, d = document.getElementById('embed-desc').value;
-    var f = document.getElementById('embed-footer').value, th = document.getElementById('embed-thumb').value, im = document.getElementById('embed-image').value;
-    if (t) embed.title = t; if (d) embed.description = d;
-    if (f) embed.footer = { text: f }; if (th) embed.thumbnail = { url: th }; if (im) embed.image = { url: im };
+    var embed = { color: color };
+    var t = document.getElementById('embed-title').value;
+    var d = document.getElementById('embed-desc').value;
+    var f = document.getElementById('embed-footer').value;
+    var th = document.getElementById('embed-thumb').value;
+    var im = document.getElementById('embed-image').value;
+    if (t) embed.title = t;
+    if (d) embed.description = d;
+    if (f) embed.footer = { text: f };
+    if (th) embed.thumbnail = { url: th };
+    if (im) embed.image = { url: im };
     payload.embeds = [embed];
   }
 
-  var { ok, data } = await apiFetch('/send', {
+  var r = await apiFetch('/send', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(payload)
   });
 
-  if (ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
-  else { notify(data.error || '발송 실패', 'error'); }
+  if (r.ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
+  else { notify(r.data.error || '발송 실패', 'error'); }
 }
 
 async function testWebhook() {
   var hookId = document.getElementById('send-hook').value;
   if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
-  var { ok } = await apiFetch('/send', {
+  var r = await apiFetch('/send', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({ webhookId: hookId, content: '🧪 HookPanel 테스트 메시지입니다!', username: 'HookPanel Test' })
   });
-  notify(ok ? '테스트 발송 완료!' : '발송 실패', ok ? 'success' : 'error');
+  notify(r.ok ? '테스트 발송 완료!' : '발송 실패', r.ok ? 'success' : 'error');
 }
 
 // ── 로그 ──
 async function loadLogs() {
-  var { ok, data } = await apiFetch('/logs', { headers: authHeaders() });
-  if (!ok) return;
-  logs = data.logs || [];
+  var r = await apiFetch('/logs', { headers: authHeaders() });
+  if (!r.ok) return;
+  logs = r.data.logs || [];
   document.getElementById('log-count').textContent = logs.length;
   renderLogs();
 }
@@ -1031,18 +997,18 @@ async function clearLogs() {
   notify('로그가 초기화되었습니다', 'info');
 }
 
-// ── 어드민 (서버에서 role 검증) ──
+// ── 어드민 ──
 async function updateAdmin() {
-  var { ok, data } = await apiFetch('/admin/stats', { headers: authHeaders() });
-  if (!ok) { notify('관리자 권한이 없습니다', 'error'); return; }
+  var r = await apiFetch('/admin/stats', { headers: authHeaders() });
+  if (!r.ok) { notify('관리자 권한이 없습니다', 'error'); return; }
 
-  document.getElementById('adm-stat-users').textContent = data.totalUsers || 0;
-  document.getElementById('adm-stat-online').textContent = data.onlineUsers || 0;
-  document.getElementById('adm-stat-hooks').textContent = data.totalHooks || 0;
-  document.getElementById('adm-stat-sent').textContent = data.totalLogs || 0;
+  document.getElementById('adm-stat-users').textContent = r.data.totalUsers || 0;
+  document.getElementById('adm-stat-online').textContent = r.data.onlineUsers || 0;
+  document.getElementById('adm-stat-hooks').textContent = r.data.totalHooks || 0;
+  document.getElementById('adm-stat-sent').textContent = r.data.totalLogs || 0;
 
-  var { data: ud } = await apiFetch('/admin/users', { headers: authHeaders() });
-  var users = ud.users || [];
+  var ur = await apiFetch('/admin/users', { headers: authHeaders() });
+  var users = ur.data.users || [];
   document.getElementById('adm-user-table').innerHTML = users.map(function(u) {
     var isMe = currentUser && u.username === currentUser.username;
     return '<tr><td style="color:var(--text)">' + (u.display_name || u.username)
@@ -1057,39 +1023,14 @@ async function updateAdmin() {
 
 async function toggleRole(username, currentRole) {
   var newRole = currentRole === 'admin' ? 'user' : 'admin';
-  var { ok, data } = await apiFetch('/admin/users/role', {
+  var r = await apiFetch('/admin/users/role', {
     method: 'PATCH',
     headers: authHeaders(),
-    body: JSON.stringify({ targetUsername: username, newRole })
+    body: JSON.stringify({ targetUsername: username, newRole: newRole })
   });
-  if (!ok) { notify(data.error || '변경 실패', 'error'); return; }
+  if (!r.ok) { notify(r.data.error || '변경 실패', 'error'); return; }
   notify(username + '님의 역할이 ' + newRole + '로 변경되었습니다', 'info');
   updateAdmin();
-}
-
-async function adminDeleteUser(username) {
-  if (!confirm(username + '님의 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
-  var { ok, data } = await apiFetch('/admin/users', {
-    method: 'DELETE',
-    headers: authHeaders(),
-    body: JSON.stringify({ targetUsername: username })
-  });
-  if (!ok) { notify(data.error || '삭제 실패', 'error'); return; }
-  notify(username + '님의 계정이 삭제되었습니다', 'info');
-  updateAdmin();
-}
-
-async function adminChangePw(username) {
-  var newPw = prompt(username + '님의 새 비밀번호를 입력하세요 (6자 이상):');
-  if (!newPw) return;
-  if (newPw.length < 6) { notify('비밀번호는 6자 이상이어야 합니다', 'error'); return; }
-  var { ok, data } = await apiFetch('/admin/users/password', {
-    method: 'PATCH',
-    headers: authHeaders(),
-    body: JSON.stringify({ targetUsername: username, newPassword: newPw })
-  });
-  if (!ok) { notify(data.error || '변경 실패', 'error'); return; }
-  notify(username + '님의 비밀번호가 변경되었습니다', 'success');
 }
 
 // ── 탭 전환 ──
@@ -1104,14 +1045,12 @@ function switchTab(tab) {
   if (tab === 'logs') loadLogs();
   if (tab === 'webhooks') renderWebhooks();
   if (tab === 'slash') updateSlashPreview();
-
 }
 
 async function updateDash() {
   document.getElementById('stat-hooks').textContent = webhooks.length;
   document.getElementById('stat-sent').textContent = logs.length;
 
-  // 공개 통계 (모든 유저)
   try {
     var res = await fetch('/api/public-stats');
     if (res.ok) {
@@ -1121,26 +1060,23 @@ async function updateDash() {
     }
   } catch(e) {}
 
-  // 어드민이면 정확한 전체 통계도 표시
   if (currentUser && currentUser.role === 'admin') {
-    var { ok, data } = await apiFetch('/admin/stats', { headers: authHeaders() });
-    if (ok) {
-      document.getElementById('stat-users').textContent = data.totalUsers || 0;
-      document.getElementById('stat-online').textContent = data.onlineUsers || 0;
+    var r = await apiFetch('/admin/stats', { headers: authHeaders() });
+    if (r.ok) {
+      document.getElementById('stat-users').textContent = r.data.totalUsers || 0;
+      document.getElementById('stat-online').textContent = r.data.onlineUsers || 0;
     }
   }
 
-  // 최근 로그 5개
   var dashLogs = document.getElementById('dash-logs');
   var recent = logs.slice(-5).reverse();
   dashLogs.innerHTML = recent.length ? recent.map(function(l) {
     return '<div class="discord-msg"><div style="font-size:12px;color:var(--text3);margin-bottom:2px">' + l.time + ' · ' + l.hook_name + '</div>'
       + '<div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.message + '</div></div>';
   }).join('') : '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">아직 발송 기록이 없습니다</div>';
-  // 업데이트 로그 새로고침
+
   loadChangelogs();
 
-  // 웹훅 현황
   var dashWebhooks = document.getElementById('dash-webhooks');
   dashWebhooks.innerHTML = webhooks.length ? webhooks.map(function(w) {
     return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
@@ -1181,7 +1117,6 @@ function removeSlashField(idx) {
   var el = document.getElementById('slash-field-' + idx);
   if (el) el.remove();
   slashFields.splice(idx, 1);
-  // 재렌더
   var list = document.getElementById('slash-fields-list');
   list.innerHTML = '';
   var tmp = slashFields.slice();
@@ -1203,7 +1138,7 @@ function buildSlashPayload() {
   var footerIcon = document.getElementById('slash-footer-icon').value;
   var useTs = document.getElementById('slash-timestamp').checked;
 
-  var embed = { color };
+  var embed = { color: color };
   if (title) embed.title = title;
   if (desc) embed.description = desc;
   if (thumb) embed.thumbnail = { url: thumb };
@@ -1212,14 +1147,15 @@ function buildSlashPayload() {
   if (footer || footerIcon) embed.footer = { text: footer || '', icon_url: footerIcon || undefined };
   if (useTs) embed.timestamp = new Date().toISOString();
 
-  // 필드 수집
   var fields = [];
   document.querySelectorAll('[id^="slash-field-name-"]').forEach(function(el) {
     var i = el.id.replace('slash-field-name-', '');
     var name = el.value;
-    var value = document.getElementById('slash-field-value-' + i) ? document.getElementById('slash-field-value-' + i).value : '';
-    var inline = document.getElementById('slash-field-inline-' + i) ? document.getElementById('slash-field-inline-' + i).checked : false;
-    if (name || value) fields.push({ name: name || '\u200b', value: value || '\u200b', inline });
+    var valueEl = document.getElementById('slash-field-value-' + i);
+    var inlineEl = document.getElementById('slash-field-inline-' + i);
+    var value = valueEl ? valueEl.value : '';
+    var inline = inlineEl ? inlineEl.checked : false;
+    if (name || value) fields.push({ name: name || '\u200b', value: value || '\u200b', inline: inline });
   });
   if (fields.length) embed.fields = fields;
 
@@ -1236,7 +1172,7 @@ function buildSlashPayload() {
 function updateSlashPreview() {
   var payload = buildSlashPayload();
   var embed = payload.embeds ? payload.embeds[0] : null;
-  var botName = (document.getElementById('slash-username').value) || 'SlashBot';
+  var botName = document.getElementById('slash-username').value || 'SlashBot';
   var colorHex = document.getElementById('slash-color').value;
 
   var html = '<div style="display:flex;gap:12px">'
@@ -1283,8 +1219,6 @@ function updateSlashPreview() {
   } else {
     container.innerHTML = '<div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>';
   }
-
-
 }
 
 async function sendSlashMessage() {
@@ -1293,19 +1227,19 @@ async function sendSlashMessage() {
   var payload = buildSlashPayload();
   if (!payload.content && !payload.embeds) { notify('내용을 입력해주세요', 'error'); return; }
 
-  var { ok, data } = await apiFetch('/send', {
+  var r = await apiFetch('/send', {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ webhookId: hookId, ...payload })
+    body: JSON.stringify(Object.assign({ webhookId: hookId }, payload))
   });
-  if (ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
-  else { notify(data.error || '발송 실패', 'error'); }
+  if (r.ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
+  else { notify(r.data.error || '발송 실패', 'error'); }
 }
 
 async function testSlashMessage() {
   var hookId = document.getElementById('slash-hook').value;
   if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
-  var { ok } = await apiFetch('/send', {
+  var r = await apiFetch('/send', {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({
@@ -1325,7 +1259,7 @@ async function testSlashMessage() {
       }]
     })
   });
-  notify(ok ? '테스트 발송 완료!' : '발송 실패', ok ? 'success' : 'error');
+  notify(r.ok ? '테스트 발송 완료!' : '발송 실패', r.ok ? 'success' : 'error');
 }
 
 function clearSlashForm() {
@@ -1348,23 +1282,62 @@ function updateSlashHookList() {
 }
 
 function showStep(step) {
-  ['login','register','otp'].forEach(function(s) { document.getElementById('step-'+s).style.display = 'none'; });
-  document.getElementById('step-' + step).style.display = 'block';
+  ['login','register','otp'].forEach(function(s) {
+    var el = document.getElementById('step-' + s);
+    if (el) el.style.display = 'none';
+  });
+  var target = document.getElementById('step-' + step);
+  if (target) target.style.display = 'block';
 }
 function showRegister() { showStep('register'); }
 function showLogin() { showStep('login'); }
 function showAddWebhook() { document.getElementById('modal-webhook').style.display = 'block'; }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-// ── 업데이트 로그 ──
-var changelogTypeMap = { feature: { label: '신기능', color: 'var(--green)', bg: 'rgba(87,242,135,.1)' }, fix: { label: '버그픽스', color: 'var(--red)', bg: 'rgba(237,66,69,.1)' }, update: { label: '업데이트', color: 'var(--accent)', bg: 'rgba(88,101,242,.1)' } };
+// ── 템플릿 (stub - 서버 연동 필요) ──
+function saveTemplate() {
+  notify('템플릿 기능은 서버 연동이 필요합니다', 'info');
+  closeModal('modal-template');
+}
+
+// BUG FIX #3: updateTplPreview was called but never defined
+function updateTplPreview() {
+  var title = document.getElementById('tpl-embed-title') ? document.getElementById('tpl-embed-title').value : '';
+  var desc = document.getElementById('tpl-embed-desc') ? document.getElementById('tpl-embed-desc').value : '';
+  var content = document.getElementById('tpl-content') ? document.getElementById('tpl-content').value : '';
+  var color = document.getElementById('tpl-embed-color') ? document.getElementById('tpl-embed-color').value : '#5865f2';
+  var botName = document.getElementById('tpl-botname') ? document.getElementById('tpl-botname').value : 'WebhookBot';
+  var preview = document.getElementById('tpl-preview');
+  if (!preview) return;
+
+  var html = '<div style="display:flex;gap:10px">'
+    + '<div class="avatar" style="width:32px;height:32px;font-size:12px">' + (botName || 'W').charAt(0).toUpperCase() + '</div>'
+    + '<div style="flex:1"><div style="color:#fff;font-weight:600;font-size:13px;margin-bottom:3px">' + (botName || 'WebhookBot') + ' <span style="background:#5865f2;color:#fff;font-size:9px;padding:1px 4px;border-radius:2px">BOT</span></div>';
+  if (content) html += '<div style="color:#dcddde;font-size:13px;margin-bottom:5px">' + content + '</div>';
+  if (title || desc) {
+    html += '<div style="background:#2f3136;border-left:3px solid ' + color + ';border-radius:0 4px 4px 0;padding:10px">';
+    if (title) html += '<div style="color:#fff;font-weight:600;font-size:14px;margin-bottom:4px">' + title + '</div>';
+    if (desc) html += '<div style="color:#dcddde;font-size:12px">' + desc + '</div>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+  preview.innerHTML = (content || title || desc) ? html : '<div style="color:#72767d;font-size:12px;text-align:center;padding:10px">내용을 입력하면 미리보기가 표시됩니다</div>';
+}
+
+// ── BUG FIX #1: 업데이트 로그 - font-family 따옴표 충돌 수정 ──
+var changelogTypeMap = {
+  feature: { label: '신기능', color: 'var(--green)', bg: 'rgba(87,242,135,.1)' },
+  fix: { label: '버그픽스', color: 'var(--red)', bg: 'rgba(237,66,69,.1)' },
+  update: { label: '업데이트', color: 'var(--accent)', bg: 'rgba(88,101,242,.1)' }
+};
 
 function renderChangelogItem(c) {
   var t = changelogTypeMap[c.type] || changelogTypeMap.update;
   var date = new Date(c.created_at).toLocaleDateString('ko', { month: 'long', day: 'numeric' });
+  // 수정: font-family를 인라인 스타일 문자열 안에서 작은따옴표 충돌 없이 처리
   return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'
     + '<div style="flex-shrink:0;text-align:center">'
-    + '<div style="font-size:12px;font-weight:700;color:var(--accent);font-family:'Syne',sans-serif">' + c.version + '</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--accent)">' + c.version + '</div>'
     + '<div style="font-size:10px;color:var(--text3)">' + date + '</div>'
     + '</div>'
     + '<div style="flex:1;min-width:0">'
@@ -1381,27 +1354,25 @@ async function loadChangelogs() {
     var res = await fetch('/api/changelog');
     if (!res.ok) return;
     var data = await res.json();
-    var logs = data.changelogs || [];
+    var clogs = data.changelogs || [];
 
-    // 로그인 페이지
     var loginEl = document.getElementById('login-changelog');
     var loginVer = document.getElementById('login-latest-version');
     if (loginEl) {
-      if (logs.length) {
-        if (loginVer) loginVer.textContent = logs[0].version;
-        loginEl.innerHTML = logs.slice(0, 5).map(renderChangelogItem).join('');
+      if (clogs.length) {
+        if (loginVer) loginVer.textContent = clogs[0].version;
+        loginEl.innerHTML = clogs.slice(0, 5).map(renderChangelogItem).join('');
       } else {
         loginEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
       }
     }
 
-    // 대시보드
     var dashEl = document.getElementById('dash-changelog');
     var dashVer = document.getElementById('dash-latest-version');
     if (dashEl) {
-      if (logs.length) {
-        if (dashVer) dashVer.textContent = logs[0].version;
-        dashEl.innerHTML = logs.map(renderChangelogItem).join('');
+      if (clogs.length) {
+        if (dashVer) dashVer.textContent = clogs[0].version;
+        dashEl.innerHTML = clogs.map(renderChangelogItem).join('');
       } else {
         dashEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
       }
@@ -1428,7 +1399,11 @@ function toggleEmbed() {
   updatePreview();
 }
 function syncColorPicker() { document.getElementById('embed-color-text').value = document.getElementById('embed-color').value; updatePreview(); }
-function syncColorText() { var v = document.getElementById('embed-color-text').value; if (/^#[0-9A-Fa-f]{6}$/.test(v)) document.getElementById('embed-color').value = v; updatePreview(); }
+function syncColorText() {
+  var v = document.getElementById('embed-color-text').value;
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) document.getElementById('embed-color').value = v;
+  updatePreview();
+}
 
 function updatePreview() {
   var content = document.getElementById('send-content').value;
@@ -1457,12 +1432,6 @@ function updatePreview() {
   } else {
     container.innerHTML = '<div style="text-align:center;color:#72767d;font-size:13px;padding:20px">메시지를 입력하면 미리보기가 표시됩니다</div>';
   }
-}
-
-  // 사용 횟수 증가
-  apiFetch('/templates', { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ id: tpl.id }) });
-  updateSlashPreview();
-  notify('템플릿이 적용되었습니다!', 'success');
 }
 </script>
 </body>
