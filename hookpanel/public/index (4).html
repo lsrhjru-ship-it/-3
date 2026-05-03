@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HookPanel - Discord 웹훅 관리</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0b0f;--bg2:#111318;--bg3:#1a1d26;--bg4:#222634;
+    --accent:#5865f2;--accent2:#7289da;--accent3:#eb459e;
+    --green:#57f287;--yellow:#fee75c;--red:#ed4245;
+    --text:#ffffff;--text2:#b9bbbe;--text3:#72767d;
+    --border:#2e3035;--border2:#40444b;
+    --glow:rgba(88,101,242,0.3);--glow2:rgba(235,69,158,0.2);
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .page{display:none;min-height:100vh;animation:fadeIn .3s ease}
+  .page.active{display:flex}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 20px 8px var(--glow)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent3));color:#fff}
+  .btn-primary:hover{filter:brightness(1.15);transform:translateY(-1px)}
+  .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+  .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(88,101,242,.08)}
+  .btn-danger{background:var(--red);color:#fff;border:none}
+  .btn-danger:hover{filter:brightness(1.2)}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+  input,textarea,select{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:14px;padding:10px 14px;border-radius:8px;width:100%;outline:none;transition:border .2s}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+  textarea{resize:vertical;min-height:80px;line-height:1.5}
+  label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.5px}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px}
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:500}
+  .tag-online{background:rgba(87,242,135,.15);color:var(--green);border:1px solid rgba(87,242,135,.3)}
+  .tag-offline{background:rgba(114,118,125,.15);color:var(--text3);border:1px solid rgba(114,118,125,.3)}
+  .tag-admin{background:rgba(235,69,158,.15);color:var(--accent3);border:1px solid rgba(235,69,158,.3)}
+  .tag-user{background:rgba(88,101,242,.15);color:var(--accent2);border:1px solid rgba(88,101,242,.3)}
+  .scrollbar::-webkit-scrollbar{width:4px}
+  .scrollbar::-webkit-scrollbar-track{background:var(--bg3)}
+  .scrollbar::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px)}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:480px;max-width:95vw;max-height:85vh;overflow-y:auto}
+  .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent3))}
+  .sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:100vh;flex-shrink:0}
+  .sidebar-item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-radius:8px;cursor:pointer;transition:all .2s;font-size:14px;color:var(--text2);margin:2px 8px}
+  .sidebar-item:hover{background:var(--bg3);color:var(--text)}
+  .sidebar-item.active{background:rgba(88,101,242,.2);color:var(--accent);border-left:2px solid var(--accent)}
+  .icon{width:18px;height:18px;flex-shrink:0}
+  .badge{background:var(--accent);color:#fff;font-size:10px;padding:2px 6px;border-radius:100px;margin-left:auto}
+  .online-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+  .table-wrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 16px;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+  td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2)}
+  tr:hover td{background:var(--bg3)}
+  .notification{position:fixed;top:20px;right:20px;z-index:200;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;font-size:14px;animation:slideIn .3s ease;max-width:320px}
+  @keyframes slideIn{from{transform:translateX(120%)}to{transform:translateX(0)}}
+  .notif-success{background:#23272a;border:1px solid var(--green);color:var(--green)}
+  .notif-error{background:#23272a;border:1px solid var(--red);color:var(--red)}
+  .notif-info{background:#23272a;border:1px solid var(--accent);color:var(--accent)}
+  .discord-msg{background:var(--bg3);border-radius:8px;padding:12px;margin:6px 0}
+  .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .section-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px}
+  .section-sub{font-size:13px;color:var(--text3);margin-bottom:20px}
+  .main-content{flex:1;overflow-y:auto;background:var(--bg)}
+  .tab-content{padding:28px}
+  .otp-inputs{display:flex;gap:8px;justify-content:center;margin:20px 0}
+  .otp-input{width:48px;height:56px;text-align:center;font-size:22px;font-weight:700;font-family:'Syne',sans-serif;border-radius:10px;border:2px solid var(--border2);background:var(--bg3);color:var(--text);transition:all .2s}
+  .otp-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
+  .otp-input.filled{border-color:var(--accent2)}
+  .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+  .google-oauth-btn{background:#fff;color:#3c4043;border:1px solid #dadce0;width:100%;justify-content:center;padding:11px;font-size:14px;font-weight:500;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .2s}
+  .google-oauth-btn:hover{background:#f8f9fa;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .divider{display:flex;align-items:center;gap:12px;margin:16px 0}
+  .divider-line{flex:1;height:1px;background:var(--border)}
+  .divider-text{font-size:12px;color:var(--text3)}
+  #step-otp{display:none}
+  #step-login{display:block}
+  #step-register{display:none}
+  .timer-text{font-size:12px;color:var(--text3);text-align:center}
+  .timer-text span{color:var(--accent);font-weight:600}
+  @media(max-width:768px){
+    .sidebar{width:60px}
+    .sidebar-item span.label{display:none}
+    .sidebar-logo-text{display:none}
+    .sidebar-user-name{display:none}
+    .grid-2{grid-template-columns:1fr!important}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="page-login" style="align-items:center;justify-content:center;background:radial-gradient(ellipse at top left,rgba(88,101,242,.12) 0%,transparent 50%),radial-gradient(ellipse at bottom right,rgba(235,69,158,.08) 0%,transparent 50%),var(--bg)">
+  <div style="width:100%;max-width:420px;padding:24px">
+    <div style="text-align:center;margin-bottom:40px;animation:float 3s ease-in-out infinite">
+      <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 32px var(--glow)">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM18 8l-6 3.75L6 8V6l6 3.75L18 6v2z" fill="white"/></svg>
+      </div>
+      <h1 style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">HookPanel</h1>
+      <p style="color:var(--text3);font-size:14px;margin-top:6px">Discord 웹훅 관리 플랫폼</p>
+    </div>
+
+    <div class="card" style="padding:28px">
+      <!-- STEP: LOGIN -->
+      <div id="step-login">
+        <div style="margin-bottom:16px"><label>아이디</label><input type="text" id="login-id" placeholder="아이디 입력" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <div style="margin-bottom:20px"><label>비밀번호</label><input type="password" id="login-pw" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+        <button class="btn btn-primary" id="login-btn" style="width:100%;justify-content:center;padding:12px" onclick="doLogin()">로그인</button>
+
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">소셜 로그인</span><div class="divider-line"></div></div>
+
+        <button class="google-oauth-btn" onclick="triggerGoogleLogin()" style="margin-bottom:10px;width:100%">
+          <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Google 계정으로 로그인
+        </button>
+
+        <button onclick="discordLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:#5865f2;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s;margin-bottom:10px" onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963a.074.074 0 0 0-.041-.104 13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/></svg>
+          Discord로 로그인
+        </button>
+
+        <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--text3)">계정이 없으신가요? <a onclick="showRegister()" style="color:var(--accent);cursor:pointer;text-decoration:underline">회원가입</a></p>
+      </div>
+
+      <!-- STEP: REGISTER -->
+      <div id="step-register">
+        <div style="margin-bottom:16px"><label>아이디</label><input type="text" id="reg-id" placeholder="사용할 아이디"/></div>
+        <div style="margin-bottom:16px"><label>이메일</label><input type="email" id="reg-email" placeholder="이메일 주소 (인증코드 발송)"/></div>
+        <div style="margin-bottom:16px"><label>비밀번호</label><input type="password" id="reg-pw" placeholder="6자 이상"/></div>
+        <div style="margin-bottom:20px"><label>비밀번호 확인</label><input type="password" id="reg-pw2" placeholder="비밀번호 재입력"/></div>
+        <button class="btn btn-primary" id="reg-btn" style="width:100%;justify-content:center;padding:12px" onclick="doRegister()">인증코드 발송 →</button>
+        <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--text3)">이미 계정이 있으신가요? <a onclick="showLogin()" style="color:var(--accent);cursor:pointer;text-decoration:underline">로그인</a></p>
+      </div>
+
+      <!-- STEP: OTP -->
+      <div id="step-otp">
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM18 8l-6 3.75L6 8V6l6 3.75L18 6v2z"/></svg>
+          </div>
+          <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">이메일 인증</div>
+          <div style="font-size:13px;color:var(--text3)">아래 이메일로 6자리 인증코드를 발송했습니다</div>
+          <div style="font-size:14px;color:var(--accent2);margin-top:4px;font-weight:500" id="otp-email-display"></div>
+        </div>
+        <div class="otp-inputs">
+          <input class="otp-input" type="text" maxlength="1" id="otp0" oninput="otpInput(0)" onkeydown="otpKey(event,0)">
+          <input class="otp-input" type="text" maxlength="1" id="otp1" oninput="otpInput(1)" onkeydown="otpKey(event,1)">
+          <input class="otp-input" type="text" maxlength="1" id="otp2" oninput="otpInput(2)" onkeydown="otpKey(event,2)">
+          <input class="otp-input" type="text" maxlength="1" id="otp3" oninput="otpInput(3)" onkeydown="otpKey(event,3)">
+          <input class="otp-input" type="text" maxlength="1" id="otp4" oninput="otpInput(4)" onkeydown="otpKey(event,4)">
+          <input class="otp-input" type="text" maxlength="1" id="otp5" oninput="otpInput(5)" onkeydown="otpKey(event,5)">
+        </div>
+        <div class="timer-text" style="margin-bottom:16px">인증코드 유효시간: <span id="otp-timer">15:00</span></div>
+        <button class="btn btn-primary" id="otp-verify-btn" style="width:100%;justify-content:center;padding:12px" onclick="verifyOTP()">인증 확인</button>
+        <button class="btn btn-outline" style="width:100%;justify-content:center;margin-top:8px;font-size:13px" onclick="resendOTP()">코드 재발송</button>
+        <button class="btn" style="width:100%;justify-content:center;margin-top:4px;font-size:12px;color:var(--text3)" onclick="showRegister()">← 돌아가기</button>
+      </div>
+    </div>
+
+    <div id="discord-loading" style="display:none;text-align:center;margin-top:16px">
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;color:var(--text3);font-size:13px">
+        <div class="spinner"></div>Discord 인증 처리 중...
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(87,242,135,.08);border:1px solid rgba(87,242,135,.2);border-radius:100px;padding:6px 16px">
+        <span class="online-dot"></span>
+        <span style="font-size:13px;color:var(--text2)">현재 <span id="login-online-count" style="color:var(--green);font-weight:600">...</span>명 온라인</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:12px">
+      <a href="https://discord.gg/mDN69g9xb8" target="_blank"
+        style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#5865f2;color:#fff;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:background .2s"
+        onmouseover="this.style.background='#4752c4'" onmouseout="this.style.background='#5865f2'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963a.074.074 0 0 0-.041-.104 13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028zM8.02 15.278c-1.182 0-2.157-1.069-2.157-2.38 0-1.312.956-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.956 2.38-2.157 2.38zm7.975 0c-1.183 0-2.157-1.069-2.157-2.38 0-1.312.955-2.38 2.157-2.38 1.21 0 2.176 1.077 2.157 2.38 0 1.312-.946 2.38-2.157 2.38z"/></svg>
+        Discord 서버 참여하기
+      </a>
+    </div>
+
+    <div style="margin-top:20px;max-width:420px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--accent)"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05zM11 13H9V7h2v6zm0 4H9v-2h2v2z"/></svg>
+        <span style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">업데이트 로그</span>
+        <span id="login-latest-version" style="font-size:11px;background:rgba(88,101,242,.2);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:600"></span>
+      </div>
+      <div id="login-changelog" style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">불러오는 중...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="page" id="page-app" style="flex-direction:row">
+  <div class="sidebar">
+    <div style="padding:20px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:14px;flex-shrink:0">H</div>
+        <div class="sidebar-logo-text"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px">HookPanel</div><div style="font-size:11px;color:var(--text3)">v3.0</div></div>
+      </div>
+    </div>
+    <nav style="flex:1;padding:12px 0">
+      <div style="padding:0 16px;margin-bottom:8px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">메인</div>
+      <div class="sidebar-item active" onclick="switchTab('dashboard')" id="nav-dashboard">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <span class="label">대시보드</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab('webhooks')" id="nav-webhooks">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h1v-2H7c-1.65 0-3-1.35-3-3s1.35-3 3-3h10c1.65 0 3 1.35 3 3s-1.35 3-3 3h-1v2h1c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+        <span class="label">웹훅 관리</span>
+        <span class="badge" id="webhook-count">0</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab('send')" id="nav-send">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        <span class="label">메시지 발송</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab('slash')" id="nav-slash">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
+        <span class="label">슬래시 메시지</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab('logs')" id="nav-logs">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+        <span class="label">발송 로그</span>
+        <span class="badge" id="log-count">0</span>
+      </div>
+      <div id="admin-section" style="display:none">
+        <div style="padding:0 16px;margin:16px 0 8px;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">관리자</div>
+        <div class="sidebar-item" onclick="switchTab('admin')" id="nav-admin">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          <span class="label">관리자 패널</span>
+        </div>
+      </div>
+    </nav>
+    <div style="padding:16px;border-top:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar" id="sidebar-avatar" style="width:32px;height:32px;font-size:12px;overflow:hidden">?</div>
+        <div style="flex:1;min-width:0" class="sidebar-user-name">
+          <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="sidebar-name">-</div>
+          <div style="display:flex;align-items:center;gap:4px"><span class="online-dot"></span><span style="font-size:11px;color:var(--text3)">온라인</span></div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="doLogout()" title="로그아웃" style="padding:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content scrollbar">
+    <!-- DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content">
+      <div class="section-title">대시보드</div>
+      <div class="section-sub">전체 현황을 한눈에 확인하세요</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px">
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">총 회원</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-users">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">온라인</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-online">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">웹훅 수</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-hooks">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">발송 완료</div><div style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif" id="stat-sent">0</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" class="grid-2">
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:16px">최근 발송 로그</div>
+          <div id="dash-logs"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">아직 발송 기록이 없습니다</div></div>
+        </div>
+        <div class="card">
+          <div style="font-weight:600;margin-bottom:16px">내 웹훅 현황</div>
+          <div id="dash-webhooks"><div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">등록된 웹훅이 없습니다</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent)"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 3.21-1.81 6-4.72 7.72L13 17v5h5l-1.22-1.22C19.91 19.07 22 15.76 22 12c0-5.18-3.95-9.45-9-9.95zM11 2.05C5.95 2.55 2 6.82 2 12c0 3.76 2.09 7.07 5.22 8.78L6 22h5V2.05z"/></svg>
+          <span style="font-weight:600">업데이트 로그</span>
+          <span id="dash-latest-version" style="font-size:11px;background:rgba(88,101,242,.2);color:var(--accent);padding:2px 8px;border-radius:100px;font-weight:600"></span>
+        </div>
+        <div id="dash-changelog" style="display:flex;flex-direction:column;gap:10px">
+          <div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">불러오는 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WEBHOOKS -->
+    <div id="tab-webhooks" class="tab-content" style="display:none">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+        <div><div class="section-title">웹훅 관리</div><div class="section-sub">Discord 웹훅 URL을 등록하고 관리하세요</div></div>
+        <button class="btn btn-primary" onclick="showAddWebhook()">+ 웹훅 추가</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>이름</th><th>채널</th><th>URL</th><th>등록일</th><th>상태</th><th>작업</th></tr></thead>
+            <tbody id="webhook-table"><tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">등록된 웹훅이 없습니다</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEND -->
+    <div id="tab-send" class="tab-content" style="display:none">
+      <div class="section-title">메시지 발송</div>
+      <div class="section-sub">Discord 채널에 메시지를 발송합니다</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:16px">기본 설정</div>
+            <div style="margin-bottom:12px"><label>웹훅 선택</label><select id="send-hook"><option value="">웹훅을 선택하세요</option></select></div>
+            <div style="margin-bottom:12px"><label>봇 이름 (선택)</label><input type="text" id="send-username" placeholder="기본 봇 이름 사용" oninput="updatePreview()"/></div>
+            <div style="margin-bottom:12px"><label>봇 아바타 URL (선택)</label><input type="text" id="send-avatar" placeholder="https://..."/></div>
+          </div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:16px">메시지 내용</div>
+            <div style="margin-bottom:12px"><label>일반 메시지</label><textarea id="send-content" placeholder="메시지를 입력하세요..." oninput="updatePreview()"></textarea></div>
+          </div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <div style="font-weight:600">임베드 설정</div>
+              <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:13px;cursor:pointer"><input type="checkbox" id="embed-toggle" onchange="toggleEmbed()" style="width:auto;accent-color:var(--accent)"> 임베드 사용</label>
+            </div>
+            <div id="embed-fields" style="display:none">
+              <div style="margin-bottom:12px">
+                <label>임베드 색상</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="color" id="embed-color" value="#5865f2" style="width:48px;height:36px;padding:4px;cursor:pointer" oninput="syncColorPicker()">
+                  <input type="text" id="embed-color-text" value="#5865f2" style="flex:1" oninput="syncColorText()">
+                </div>
+              </div>
+              <div style="margin-bottom:12px"><label>제목</label><input type="text" id="embed-title" placeholder="임베드 제목" oninput="updatePreview()"/></div>
+              <div style="margin-bottom:12px"><label>설명</label><textarea id="embed-desc" placeholder="임베드 설명..." oninput="updatePreview()"></textarea></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+                <div><label>푸터</label><input type="text" id="embed-footer" placeholder="푸터 텍스트" oninput="updatePreview()"/></div>
+                <div><label>썸네일 URL</label><input type="text" id="embed-thumb" placeholder="https://..." oninput="updatePreview()"/></div>
+              </div>
+              <div style="margin-bottom:12px"><label>이미지 URL</label><input type="text" id="embed-image" placeholder="https://..." oninput="updatePreview()"/></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="sendMessage()" style="flex:1;justify-content:center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>발송하기
+            </button>
+            <button class="btn btn-outline" onclick="testWebhook()">테스트</button>
+          </div>
+        </div>
+        <div>
+          <div style="position:sticky;top:20px">
+            <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">미리보기</div>
+            <div style="background:#36393f;border-radius:12px;padding:20px">
+              <div id="preview-container"><div style="text-align:center;color:#72767d;font-size:13px;padding:20px">메시지를 입력하면 미리보기가 표시됩니다</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLASH MESSAGE -->
+    <div id="tab-slash" class="tab-content" style="display:none">
+      <div class="section-title">슬래시 스타일 메시지</div>
+      <div class="section-sub">Discord 슬래시 명령어 느낌의 리치 메시지를 발송합니다</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="grid-2">
+        <div>
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:16px">기본 설정</div>
+            <div style="margin-bottom:12px"><label>웹훅 선택</label><select id="slash-hook"><option value="">웹훅을 선택하세요</option></select></div>
+            <div style="margin-bottom:12px"><label>봇 이름</label><input type="text" id="slash-username" placeholder="SlashBot" oninput="updateSlashPreview()"/></div>
+            <div style="margin-bottom:12px"><label>봇 아바타 URL</label><input type="text" id="slash-avatar" placeholder="https://..."/></div>
+            <div style="margin-bottom:12px"><label>메시지 내용 (선택)</label><textarea id="slash-content" placeholder="메시지..." oninput="updateSlashPreview()"></textarea></div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div style="font-weight:600;margin-bottom:16px">임베드</div>
+            <div style="margin-bottom:12px">
+              <label>색상</label>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input type="color" id="slash-color" value="#5865f2" style="width:48px;height:36px;padding:4px;cursor:pointer" oninput="updateSlashPreview()">
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <div onclick="setSlashColor('#5865f2')" style="width:24px;height:24px;border-radius:50%;background:#5865f2;cursor:pointer;border:2px solid transparent" title="블루페이"></div>
+                  <div onclick="setSlashColor('#57f287')" style="width:24px;height:24px;border-radius:50%;background:#57f287;cursor:pointer" title="그린"></div>
+                  <div onclick="setSlashColor('#fee75c')" style="width:24px;height:24px;border-radius:50%;background:#fee75c;cursor:pointer" title="옐로우"></div>
+                  <div onclick="setSlashColor('#ed4245')" style="width:24px;height:24px;border-radius:50%;background:#ed4245;cursor:pointer" title="레드"></div>
+                  <div onclick="setSlashColor('#eb459e')" style="width:24px;height:24px;border-radius:50%;background:#eb459e;cursor:pointer" title="핑크"></div>
+                  <div onclick="setSlashColor('#ffffff')" style="width:24px;height:24px;border-radius:50%;background:#ffffff;cursor:pointer;border:1px solid #555" title="화이트"></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-bottom:12px"><label>제목</label><input type="text" id="slash-title" placeholder="임베드 제목" oninput="updateSlashPreview()"/></div>
+            <div style="margin-bottom:12px"><label>설명</label><textarea id="slash-desc" placeholder="임베드 설명..." oninput="updateSlashPreview()"></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+              <div><label>썸네일 URL</label><input type="text" id="slash-thumb" placeholder="https://..." oninput="updateSlashPreview()"/></div>
+              <div><label>이미지 URL</label><input type="text" id="slash-img" placeholder="https://..." oninput="updateSlashPreview()"/></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+              <div><label>Author 이름</label><input type="text" id="slash-author" placeholder="작성자명" oninput="updateSlashPreview()"/></div>
+              <div><label>Author 아이콘 URL</label><input type="text" id="slash-author-icon" placeholder="https://..." oninput="updateSlashPreview()"/></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+              <div><label>푸터 텍스트</label><input type="text" id="slash-footer" placeholder="푸터" oninput="updateSlashPreview()"/></div>
+              <div><label>푸터 아이콘 URL</label><input type="text" id="slash-footer-icon" placeholder="https://..." oninput="updateSlashPreview()"/></div>
+            </div>
+            <div style="margin-bottom:4px"><label>타임스탬프</label>
+              <label style="display:flex;align-items:center;gap:6px;text-transform:none;letter-spacing:0;font-size:13px;cursor:pointer;margin:0">
+                <input type="checkbox" id="slash-timestamp" onchange="updateSlashPreview()" style="width:auto;accent-color:var(--accent)"> 현재 시간 자동 삽입
+              </label>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="font-weight:600">인라인 필드</div>
+              <button class="btn btn-outline btn-sm" onclick="addSlashField()">+ 필드 추가</button>
+            </div>
+            <div id="slash-fields-list"></div>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="sendSlashMessage()" style="flex:1;justify-content:center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>발송하기
+            </button>
+            <button class="btn btn-outline" onclick="testSlashMessage()">테스트</button>
+            <button class="btn btn-outline" onclick="clearSlashForm()">초기화</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="position:sticky;top:20px">
+            <div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Discord 미리보기</div>
+            <div style="background:#36393f;border-radius:12px;padding:16px;min-height:200px">
+              <div id="slash-preview-container">
+                <div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOGS -->
+    <div id="tab-logs" class="tab-content" style="display:none">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+        <div><div class="section-title">발송 로그</div><div class="section-sub">모든 웹훅 발송 기록입니다</div></div>
+        <button class="btn btn-outline btn-sm btn-danger" onclick="clearLogs()">로그 초기화</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>시간</th><th>웹훅</th><th>메시지</th><th>상태</th></tr></thead>
+            <tbody id="log-table"><tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">발송 기록이 없습니다</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="tab-admin" class="tab-content" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div class="section-title">관리자 패널</div>
+        <span class="tag tag-admin">ADMIN ONLY</span>
+      </div>
+      <div class="section-sub">서비스 전체 현황을 관리합니다</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px">
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);margin-bottom:6px">총 가입자</div><div style="font-size:26px;font-weight:700;font-family:'Syne',sans-serif" id="adm-stat-users">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);margin-bottom:6px">현재 온라인</div><div style="font-size:26px;font-weight:700;font-family:'Syne',sans-serif;color:var(--green)" id="adm-stat-online">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);margin-bottom:6px">총 웹훅</div><div style="font-size:26px;font-weight:700;font-family:'Syne',sans-serif" id="adm-stat-hooks">0</div></div>
+        <div class="stat-card"><div style="font-size:11px;color:var(--text3);margin-bottom:6px">총 발송</div><div style="font-size:26px;font-weight:700;font-family:'Syne',sans-serif" id="adm-stat-sent">0</div></div>
+      </div>
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:12px">전체 회원 관리</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>아이디</th><th>이메일</th><th>역할</th><th>가입일</th><th>상태</th><th>작업</th></tr></thead>
+            <tbody id="adm-user-table"><tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">회원 없음</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Webhook Modal -->
+<div id="modal-webhook" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal('modal-webhook')">
+    <div class="modal">
+      <h3 style="font-family:'Syne',sans-serif;font-size:18px;margin-bottom:20px">웹훅 추가</h3>
+      <div style="margin-bottom:12px"><label>웹훅 이름</label><input type="text" id="wh-name" placeholder="예: 공지채널"/></div>
+      <div style="margin-bottom:12px"><label>채널 이름</label><input type="text" id="wh-channel" placeholder="예: #공지사항"/></div>
+      <div style="margin-bottom:16px"><label>Discord 웹훅 URL</label><input type="text" id="wh-url" placeholder="https://discord.com/api/webhooks/..."/></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="addWebhook()" style="flex:1;justify-content:center">추가</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-webhook')">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Template Modal -->
+<div id="modal-template" style="display:none">
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal('modal-template')">
+    <div class="modal" style="width:600px;max-width:96vw">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <h3 style="font-family:'Syne',sans-serif;font-size:18px" id="tpl-modal-title">템플릿 만들기</h3>
+        <button onclick="closeModal('modal-template')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label>템플릿 이름 *</label><input type="text" id="tpl-name" placeholder="예: 공지 템플릿"/></div>
+        <div><label>설명</label><input type="text" id="tpl-desc" placeholder="간단한 설명"/></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">메시지 내용</div>
+        <div style="margin-bottom:10px"><label>봇 이름</label><input type="text" id="tpl-botname" placeholder="WebhookBot" oninput="updateTplPreview()"/></div>
+        <div style="margin-bottom:10px"><label>봇 아바타 URL</label><input type="text" id="tpl-avatar" placeholder="https://..." oninput="updateTplPreview()"/></div>
+        <div><label>메시지 내용</label><textarea id="tpl-content" placeholder="메시지..." oninput="updateTplPreview()"></textarea></div>
+      </div>
+      <div style="border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:12px;color:var(--text2)">임베드 설정</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label>제목</label><input type="text" id="tpl-embed-title" placeholder="임베드 제목" oninput="updateTplPreview()"/></div>
+          <div>
+            <label>색상</label>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="color" id="tpl-embed-color" value="#5865f2" style="width:40px;height:36px;padding:3px;cursor:pointer" oninput="updateTplPreview()">
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px"><label>설명</label><textarea id="tpl-embed-desc" placeholder="임베드 설명..." oninput="updateTplPreview()"></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div><label>Author</label><input type="text" id="tpl-embed-author" placeholder="작성자명" oninput="updateTplPreview()"/></div>
+          <div><label>푸터</label><input type="text" id="tpl-embed-footer" placeholder="푸터 텍스트" oninput="updateTplPreview()"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label>썸네일 URL</label><input type="text" id="tpl-embed-thumb" placeholder="https://..." oninput="updateTplPreview()"/></div>
+          <div><label>이미지 URL</label><input type="text" id="tpl-embed-img" placeholder="https://..." oninput="updateTplPreview()"/></div>
+        </div>
+      </div>
+      <div style="background:#36393f;border-radius:8px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;color:#72767d;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">미리보기</div>
+        <div id="tpl-preview"></div>
+      </div>
+      <input type="hidden" id="tpl-edit-id" value="">
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveTemplate()" style="flex:1;justify-content:center">저장</button>
+        <button class="btn btn-outline" onclick="closeModal('modal-template')">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="notif-container"></div>
+
+<script>
+// =====================================================
+// 클라이언트에 API 키/비밀번호/웹훅URL 없음
+// 모든 민감한 처리는 서버(Netlify Functions)에서 수행
+// =====================================================
+
+window.__GOOGLE_CLIENT_ID__ = '394083144235-v568m0t4f6rs5ce432ap0sj0sdo3qcec.apps.googleusercontent.com';
+window.__DISCORD_CLIENT_ID__ = '1500053167402909756';
+window.__DISCORD_REDIRECT__ = 'https://3-cjh.pages.dev/';
+
+var API = '/api';
+var currentUser = null;
+var webhooks = [];
+var logs = [];
+var otpEmail = '';
+var otpTimer = null;
+
+function getToken() { return localStorage.getItem('hp_token'); }
+function setToken(t) { localStorage.setItem('hp_token', t); }
+function clearToken() { localStorage.removeItem('hp_token'); }
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+}
+
+async function apiFetch(path, options) {
+  const res = await fetch(API + path, options);
+  const data = await res.json().catch(function() { return {}; });
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ── 알림 ──
+function notify(msg, type) {
+  type = type || 'info';
+  var n = document.createElement('div');
+  n.className = 'notification notif-' + type;
+  n.innerHTML = '<span>' + msg + '</span>';
+  document.getElementById('notif-container').appendChild(n);
+  setTimeout(function() { if (n.parentNode) n.remove(); }, 3500);
+}
+
+// ── 로그인 ──
+async function doLogin() {
+  var id = document.getElementById('login-id').value.trim();
+  var pw = document.getElementById('login-pw').value;
+  if (!id || !pw) { notify('아이디와 비밀번호를 입력해주세요', 'error'); return; }
+
+  var btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 로그인 중...';
+
+  var r = await apiFetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id, pw: pw })
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '로그인';
+
+  if (!r.ok) { notify(r.data.error || '로그인 실패', 'error'); return; }
+
+  setToken(r.data.token);
+  currentUser = r.data.user;
+  notify('로그인되었습니다. 환영합니다!', 'success');
+  enterApp();
+}
+
+// ── 회원가입 ──
+async function doRegister() {
+  var id = document.getElementById('reg-id').value.trim();
+  var email = document.getElementById('reg-email').value.trim();
+  var pw = document.getElementById('reg-pw').value;
+  var pw2 = document.getElementById('reg-pw2').value;
+  if (!id || !email || !pw) { notify('모든 항목을 입력해주세요', 'error'); return; }
+  if (pw !== pw2) { notify('비밀번호가 일치하지 않습니다', 'error'); return; }
+  if (pw.length < 6) { notify('비밀번호는 6자 이상이어야 합니다', 'error'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { notify('올바른 이메일 주소를 입력해주세요', 'error'); return; }
+
+  var btn = document.getElementById('reg-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 발송 중...';
+
+  var r = await apiFetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'send_otp', id: id, email: email, pw: pw })
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '인증코드 발송 →';
+
+  if (!r.ok) { notify(r.data.error || '발송 실패', 'error'); return; }
+
+  otpEmail = email;
+  document.getElementById('otp-email-display').textContent = email;
+  for (var i = 0; i < 6; i++) {
+    document.getElementById('otp' + i).value = '';
+    document.getElementById('otp' + i).classList.remove('filled');
+  }
+  showStep('otp');
+  startOTPTimer();
+  document.getElementById('otp0').focus();
+  notify('인증코드를 발송했습니다. 이메일을 확인해주세요 ✉️', 'success');
+}
+
+// ── OTP 검증 ──
+async function verifyOTP() {
+  var otp = '';
+  for (var i = 0; i < 6; i++) otp += document.getElementById('otp' + i).value;
+  if (otp.length < 6) { notify('6자리 코드를 모두 입력해주세요', 'error'); return; }
+
+  var btn = document.getElementById('otp-verify-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> 확인 중...';
+
+  var r = await apiFetch('/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify_otp', email: otpEmail, otp: otp })
+  });
+
+  btn.disabled = false;
+  btn.innerHTML = '인증 확인';
+
+  if (!r.ok) {
+    notify(r.data.error || '인증 실패', 'error');
+    var inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach(function(el) {
+      el.style.borderColor = 'var(--red)';
+      setTimeout(function() { el.style.borderColor = ''; }, 600);
+    });
+    return;
+  }
+
+  clearInterval(otpTimer);
+  setToken(r.data.token);
+  currentUser = r.data.user;
+  notify('이메일 인증 완료! 환영합니다 ' + r.data.user.username + '님 🎉', 'success');
+  enterApp();
+}
+
+async function resendOTP() {
+  notify('회원가입 정보를 다시 입력해주세요', 'info');
+  showStep('register');
+}
+
+// ── OTP 타이머 ──
+function startOTPTimer() {
+  var secs = 900;
+  clearInterval(otpTimer);
+  otpTimer = setInterval(function() {
+    secs--;
+    var m = Math.floor(secs / 60);
+    var s = secs % 60;
+    var el = document.getElementById('otp-timer');
+    if (el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    if (secs <= 0) { clearInterval(otpTimer); notify('인증코드가 만료되었습니다. 재발송해주세요.', 'error'); }
+  }, 1000);
+}
+
+function otpInput(idx) {
+  var el = document.getElementById('otp' + idx);
+  var val = el.value.replace(/[^0-9]/g, '');
+  el.value = val;
+  if (val) { el.classList.add('filled'); if (idx < 5) document.getElementById('otp' + (idx + 1)).focus(); else verifyOTP(); }
+  else el.classList.remove('filled');
+}
+
+function otpKey(e, idx) {
+  if (e.key === 'Backspace' && !document.getElementById('otp' + idx).value && idx > 0) document.getElementById('otp' + (idx - 1)).focus();
+  if (e.key === 'Enter') verifyOTP();
+}
+
+// ── 소셜 로그인 ──
+function triggerGoogleLogin() {
+  if (window.google && google.accounts && google.accounts.oauth2) {
+    var client = google.accounts.oauth2.initTokenClient({
+      client_id: window.__GOOGLE_CLIENT_ID__ || '',
+      scope: 'email profile openid',
+      callback: function(tokenResponse) {
+        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: 'Bearer ' + tokenResponse.access_token }
+        }).then(function(r) { return r.json(); })
+          .then(function(info) { handleSocialLogin('google', { email: info.email, name: info.name, picture: info.picture, googleToken: tokenResponse.access_token }); })
+          .catch(function() { notify('Google 로그인 실패. 다시 시도해주세요.', 'error'); });
+      }
+    });
+    client.requestAccessToken();
+  }
+}
+
+function discordLogin() {
+  var DISCORD_CLIENT_ID = window.__DISCORD_CLIENT_ID__ || '';
+  var DISCORD_REDIRECT = window.__DISCORD_REDIRECT__ || window.location.origin + '/';
+  var params = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, redirect_uri: DISCORD_REDIRECT, response_type: 'token', scope: 'identify email' });
+  var url = 'https://discord.com/api/oauth2/authorize?' + params.toString();
+  var popup = window.open(url, 'discord-oauth', 'width=500,height=700');
+  document.getElementById('discord-loading').style.display = 'block';
+  var checker = setInterval(function() {
+    try {
+      if (!popup || popup.closed) { clearInterval(checker); document.getElementById('discord-loading').style.display = 'none'; return; }
+      var hash = popup.location.hash;
+      if (hash && hash.includes('access_token')) {
+        clearInterval(checker);
+        var token = new URLSearchParams(hash.substring(1)).get('access_token');
+        popup.close();
+        fetchDiscordUser(token);
+      }
+    } catch (e) {}
+  }, 300);
+}
+
+function fetchDiscordUser(token) {
+  fetch('https://discord.com/api/users/@me', { headers: { Authorization: 'Bearer ' + token } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('discord-loading').style.display = 'none';
+      handleSocialLogin('discord', {
+        email: data.email || 'discord_' + data.id + '@discord.com',
+        name: data.global_name || data.username,
+        picture: data.avatar ? 'https://cdn.discordapp.com/avatars/' + data.id + '/' + data.avatar + '.png' : '',
+        discordId: data.id,
+        discordToken: token
+      });
+    })
+    .catch(function() {
+      document.getElementById('discord-loading').style.display = 'none';
+      notify('Discord 로그인 실패. 다시 시도해주세요.', 'error');
+    });
+}
+
+async function handleSocialLogin(provider, info) {
+  var r = await apiFetch('/social-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ provider: provider }, info))
+  });
+  if (!r.ok) { notify(r.data.error || '소셜 로그인 실패', 'error'); return; }
+  setToken(r.data.token);
+  currentUser = r.data.user;
+  notify(provider === 'google' ? 'Google 계정으로 로그인되었습니다!' : 'Discord 계정으로 로그인되었습니다!', 'success');
+  enterApp();
+}
+
+// Discord redirect 처리
+(function() {
+  if (window.opener) return;
+  if (window.location.hash && window.location.hash.includes('access_token')) {
+    var token = new URLSearchParams(window.location.hash.substring(1)).get('access_token');
+    if (token) { history.replaceState(null, '', window.location.pathname); fetchDiscordUser(token); }
+  }
+})();
+
+// ── 앱 진입 ──
+async function enterApp() {
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('page-app').classList.add('active');
+  var u = currentUser;
+  document.getElementById('sidebar-name').textContent = u.displayName || u.username;
+  var avatarEl = document.getElementById('sidebar-avatar');
+  if (u.picture) {
+    avatarEl.innerHTML = '<img src="' + u.picture + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover">';
+  } else {
+    avatarEl.textContent = (u.displayName || u.username).charAt(0).toUpperCase();
+  }
+  if (u.role === 'admin') document.getElementById('admin-section').style.display = 'block';
+  await loadWebhooks();
+  await loadLogs();
+  await updateDash();
+}
+
+// ── 세션 복원 ──
+(function() {
+  var token = localStorage.getItem('hp_token');
+  if (!token) return;
+  try {
+    var payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && Date.now() / 1000 > payload.exp) { localStorage.removeItem('hp_token'); return; }
+    currentUser = { id: payload.id, username: payload.username, role: payload.role, displayName: payload.username };
+    enterApp();
+  } catch(e) { localStorage.removeItem('hp_token'); }
+})();
+
+function doLogout() {
+  clearToken();
+  currentUser = null;
+  webhooks = [];
+  logs = [];
+  document.getElementById('page-app').classList.remove('active');
+  document.getElementById('page-login').classList.add('active');
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pw').value = '';
+  document.getElementById('admin-section').style.display = 'none';
+  showStep('login');
+  notify('로그아웃되었습니다', 'info');
+}
+
+// ── 웹훅 ──
+async function loadWebhooks() {
+  var r = await apiFetch('/webhooks', { headers: authHeaders() });
+  if (!r.ok) return;
+  webhooks = r.data.webhooks || [];
+  document.getElementById('webhook-count').textContent = webhooks.length;
+  renderWebhooks();
+  updateSendHookList();
+  updateSlashHookList();
+}
+
+function renderWebhooks() {
+  var tb = document.getElementById('webhook-table');
+  tb.innerHTML = webhooks.length ? webhooks.map(function(w) {
+    return '<tr><td><strong style="color:var(--text)">' + w.name + '</strong></td>'
+      + '<td style="color:var(--accent2)">' + w.channel + '</td>'
+      + '<td><code style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px">••••••••••••••••••••</code></td>'
+      + '<td>' + w.date + '</td><td><span class="tag tag-online">활성</span></td>'
+      + '<td><button class="btn btn-sm btn-danger" onclick="deleteHook(\'' + w.id + '\')">삭제</button></td></tr>';
+  }).join('') : '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">등록된 웹훅이 없습니다</td></tr>';
+}
+
+async function addWebhook() {
+  var name = document.getElementById('wh-name').value.trim();
+  var ch = document.getElementById('wh-channel').value.trim();
+  var url = document.getElementById('wh-url').value.trim();
+  if (!name || !url) { notify('이름과 URL은 필수입니다', 'error'); return; }
+
+  var r = await apiFetch('/webhooks', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ name: name, channel: ch, url: url })
+  });
+
+  if (!r.ok) { notify(r.data.error || '추가 실패', 'error'); return; }
+
+  notify('웹훅이 추가되었습니다', 'success');
+  closeModal('modal-webhook');
+  document.getElementById('wh-name').value = '';
+  document.getElementById('wh-channel').value = '';
+  document.getElementById('wh-url').value = '';
+  await loadWebhooks();
+  updateDash();
+}
+
+async function deleteHook(id) {
+  if (!confirm('웹훅을 삭제하시겠습니까?')) return;
+  var r = await apiFetch('/webhooks', {
+    method: 'DELETE',
+    headers: authHeaders(),
+    body: JSON.stringify({ id: id })
+  });
+  if (!r.ok) { notify(r.data.error || '삭제 실패', 'error'); return; }
+  notify('삭제되었습니다', 'info');
+  await loadWebhooks();
+  updateDash();
+}
+
+function updateSendHookList() {
+  var sel = document.getElementById('send-hook');
+  sel.innerHTML = '<option value="">웹훅을 선택하세요</option>'
+    + webhooks.map(function(w) { return '<option value="' + w.id + '">' + w.name + ' (' + w.channel + ')</option>'; }).join('');
+}
+
+// ── 메시지 발송 ──
+async function sendMessage() {
+  var hookId = document.getElementById('send-hook').value;
+  if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
+  var content = document.getElementById('send-content').value;
+  var useEmbed = document.getElementById('embed-toggle').checked;
+  if (!content && !useEmbed) { notify('메시지 내용 또는 임베드를 입력해주세요', 'error'); return; }
+
+  var payload = { webhookId: hookId };
+  if (content) payload.content = content;
+  var uname = document.getElementById('send-username').value;
+  var avatar = document.getElementById('send-avatar').value;
+  if (uname) payload.username = uname;
+  if (avatar) payload.avatar_url = avatar;
+  if (useEmbed) {
+    var color = parseInt(document.getElementById('embed-color').value.replace('#', ''), 16);
+    var embed = { color: color };
+    var t = document.getElementById('embed-title').value;
+    var d = document.getElementById('embed-desc').value;
+    var f = document.getElementById('embed-footer').value;
+    var th = document.getElementById('embed-thumb').value;
+    var im = document.getElementById('embed-image').value;
+    if (t) embed.title = t;
+    if (d) embed.description = d;
+    if (f) embed.footer = { text: f };
+    if (th) embed.thumbnail = { url: th };
+    if (im) embed.image = { url: im };
+    payload.embeds = [embed];
+  }
+
+  var r = await apiFetch('/send', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(payload)
+  });
+
+  if (r.ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
+  else { notify(r.data.error || '발송 실패', 'error'); }
+}
+
+async function testWebhook() {
+  var hookId = document.getElementById('send-hook').value;
+  if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
+  var r = await apiFetch('/send', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ webhookId: hookId, content: '🧪 HookPanel 테스트 메시지입니다!', username: 'HookPanel Test' })
+  });
+  notify(r.ok ? '테스트 발송 완료!' : '발송 실패', r.ok ? 'success' : 'error');
+}
+
+// ── 로그 ──
+async function loadLogs() {
+  var r = await apiFetch('/logs', { headers: authHeaders() });
+  if (!r.ok) return;
+  logs = r.data.logs || [];
+  document.getElementById('log-count').textContent = logs.length;
+  renderLogs();
+}
+
+function renderLogs() {
+  var tb = document.getElementById('log-table');
+  tb.innerHTML = logs.length ? logs.slice().reverse().map(function(l) {
+    return '<tr><td style="font-size:12px;color:var(--text3)">' + l.time + '</td><td>' + l.hook_name + '</td>'
+      + '<td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.message + '</td>'
+      + '<td><span class="tag tag-' + (l.status === 'success' ? 'online' : 'offline') + '">' + (l.status === 'success' ? '성공' : '실패') + '</span></td></tr>';
+  }).join('') : '<tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">발송 기록이 없습니다</td></tr>';
+}
+
+async function clearLogs() {
+  if (!confirm('모든 로그를 삭제하시겠습니까?')) return;
+  await apiFetch('/logs', { method: 'DELETE', headers: authHeaders() });
+  logs = [];
+  renderLogs();
+  notify('로그가 초기화되었습니다', 'info');
+}
+
+// ── 어드민 ──
+async function updateAdmin() {
+  var r = await apiFetch('/admin/stats', { headers: authHeaders() });
+  if (!r.ok) { notify('관리자 권한이 없습니다', 'error'); return; }
+
+  document.getElementById('adm-stat-users').textContent = r.data.totalUsers || 0;
+  document.getElementById('adm-stat-online').textContent = r.data.onlineUsers || 0;
+  document.getElementById('adm-stat-hooks').textContent = r.data.totalHooks || 0;
+  document.getElementById('adm-stat-sent').textContent = r.data.totalLogs || 0;
+
+  var ur = await apiFetch('/admin/users', { headers: authHeaders() });
+  var users = ur.data.users || [];
+  document.getElementById('adm-user-table').innerHTML = users.map(function(u) {
+    var isMe = currentUser && u.username === currentUser.username;
+    return '<tr><td style="color:var(--text)">' + (u.display_name || u.username)
+      + (isMe ? '<span style="font-size:10px;color:var(--accent);margin-left:6px">(나)</span>' : '') + '</td>'
+      + '<td>' + u.email + '</td>'
+      + '<td><span class="tag tag-' + (u.role === 'admin' ? 'admin' : 'user') + '">' + u.role + '</span></td>'
+      + '<td>' + u.join_date + '</td>'
+      + '<td>' + (u.online ? '<span class="tag tag-online">온라인</span>' : '<span class="tag tag-offline">오프라인</span>') + '</td>'
+      + '<td>' + (isMe ? '-' : '<button class="btn btn-outline btn-sm" onclick="toggleRole(\'' + u.username + '\',\'' + u.role + '\')">역할변경</button>') + '</td></tr>';
+  }).join('');
+}
+
+async function toggleRole(username, currentRole) {
+  var newRole = currentRole === 'admin' ? 'user' : 'admin';
+  var r = await apiFetch('/admin/users/role', {
+    method: 'PATCH',
+    headers: authHeaders(),
+    body: JSON.stringify({ targetUsername: username, newRole: newRole })
+  });
+  if (!r.ok) { notify(r.data.error || '변경 실패', 'error'); return; }
+  notify(username + '님의 역할이 ' + newRole + '로 변경되었습니다', 'info');
+  updateAdmin();
+}
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  document.querySelectorAll('.main-content .tab-content').forEach(function(el) { el.style.display = 'none'; });
+  document.querySelectorAll('.sidebar-item').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('tab-' + tab).style.display = 'block';
+  var nav = document.getElementById('nav-' + tab);
+  if (nav) nav.classList.add('active');
+  if (tab === 'admin') updateAdmin();
+  if (tab === 'dashboard') updateDash();
+  if (tab === 'logs') loadLogs();
+  if (tab === 'webhooks') renderWebhooks();
+  if (tab === 'slash') updateSlashPreview();
+}
+
+async function updateDash() {
+  document.getElementById('stat-hooks').textContent = webhooks.length;
+  document.getElementById('stat-sent').textContent = logs.length;
+
+  try {
+    var res = await fetch('/api/public-stats');
+    if (res.ok) {
+      var ps = await res.json();
+      document.getElementById('stat-users').textContent = ps.totalUsers || 0;
+      document.getElementById('stat-online').textContent = ps.onlineUsers || 0;
+    }
+  } catch(e) {}
+
+  var dashLogs = document.getElementById('dash-logs');
+  var recent = logs.slice(-5).reverse();
+  dashLogs.innerHTML = recent.length ? recent.map(function(l) {
+    return '<div class="discord-msg"><div style="font-size:12px;color:var(--text3);margin-bottom:2px">' + l.time + ' · ' + l.hook_name + '</div>'
+      + '<div style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + l.message + '</div></div>';
+  }).join('') : '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">아직 발송 기록이 없습니다</div>';
+
+  loadChangelogs();
+
+  var dashWebhooks = document.getElementById('dash-webhooks');
+  dashWebhooks.innerHTML = webhooks.length ? webhooks.map(function(w) {
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">'
+      + '<span style="font-size:13px;flex:1">' + w.name + '</span><span style="font-size:11px;color:var(--text3)">' + w.channel + '</span>'
+      + '<span class="tag tag-online">활성</span></div>';
+  }).join('') : '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">등록된 웹훅이 없습니다</div>';
+}
+
+// ── 슬래시 스타일 메시지 ──
+var slashFields = [];
+
+function setSlashColor(hex) {
+  document.getElementById('slash-color').value = hex;
+  updateSlashPreview();
+}
+
+function addSlashField() {
+  var idx = slashFields.length;
+  slashFields.push({ name: '', value: '', inline: false });
+  var list = document.getElementById('slash-fields-list');
+  var div = document.createElement('div');
+  div.id = 'slash-field-' + idx;
+  div.style.cssText = 'background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px';
+  div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+    + '<span style="font-size:12px;color:var(--text3)">필드 ' + (idx+1) + '</span>'
+    + '<div style="display:flex;align-items:center;gap:8px">'
+    + '<label style="display:flex;align-items:center;gap:4px;text-transform:none;letter-spacing:0;font-size:12px;cursor:pointer;margin:0">'
+    + '<input type="checkbox" id="slash-field-inline-' + idx + '" style="width:auto;accent-color:var(--accent)" onchange="updateSlashPreview()"> 인라인</label>'
+    + '<button class="btn btn-danger btn-sm" onclick="removeSlashField(' + idx + ')">✕</button></div></div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<div><label>필드 이름</label><input type="text" id="slash-field-name-' + idx + '" placeholder="이름" oninput="updateSlashPreview()"/></div>'
+    + '<div><label>필드 값</label><input type="text" id="slash-field-value-' + idx + '" placeholder="값" oninput="updateSlashPreview()"/></div></div>';
+  list.appendChild(div);
+  updateSlashPreview();
+}
+
+function removeSlashField(idx) {
+  var el = document.getElementById('slash-field-' + idx);
+  if (el) el.remove();
+  slashFields.splice(idx, 1);
+  var list = document.getElementById('slash-fields-list');
+  list.innerHTML = '';
+  var tmp = slashFields.slice();
+  slashFields = [];
+  tmp.forEach(function() { addSlashField(); });
+  updateSlashPreview();
+}
+
+function buildSlashPayload() {
+  var content = document.getElementById('slash-content').value;
+  var title = document.getElementById('slash-title').value;
+  var desc = document.getElementById('slash-desc').value;
+  var color = parseInt(document.getElementById('slash-color').value.replace('#',''), 16);
+  var thumb = document.getElementById('slash-thumb').value;
+  var img = document.getElementById('slash-img').value;
+  var author = document.getElementById('slash-author').value;
+  var authorIcon = document.getElementById('slash-author-icon').value;
+  var footer = document.getElementById('slash-footer').value;
+  var footerIcon = document.getElementById('slash-footer-icon').value;
+  var useTs = document.getElementById('slash-timestamp').checked;
+
+  var embed = { color: color };
+  if (title) embed.title = title;
+  if (desc) embed.description = desc;
+  if (thumb) embed.thumbnail = { url: thumb };
+  if (img) embed.image = { url: img };
+  if (author) embed.author = { name: author, icon_url: authorIcon || undefined };
+  if (footer || footerIcon) embed.footer = { text: footer || '', icon_url: footerIcon || undefined };
+  if (useTs) embed.timestamp = new Date().toISOString();
+
+  var fields = [];
+  document.querySelectorAll('[id^="slash-field-name-"]').forEach(function(el) {
+    var i = el.id.replace('slash-field-name-', '');
+    var name = el.value;
+    var valueEl = document.getElementById('slash-field-value-' + i);
+    var inlineEl = document.getElementById('slash-field-inline-' + i);
+    var value = valueEl ? valueEl.value : '';
+    var inline = inlineEl ? inlineEl.checked : false;
+    if (name || value) fields.push({ name: name || '\u200b', value: value || '\u200b', inline: inline });
+  });
+  if (fields.length) embed.fields = fields;
+
+  var payload = {};
+  if (content) payload.content = content;
+  var uname = document.getElementById('slash-username').value;
+  var avatar = document.getElementById('slash-avatar').value;
+  if (uname) payload.username = uname;
+  if (avatar) payload.avatar_url = avatar;
+  if (Object.keys(embed).length > 1) payload.embeds = [embed];
+  return payload;
+}
+
+function updateSlashPreview() {
+  var payload = buildSlashPayload();
+  var embed = payload.embeds ? payload.embeds[0] : null;
+  var botName = document.getElementById('slash-username').value || 'SlashBot';
+  var colorHex = document.getElementById('slash-color').value;
+
+  var html = '<div style="display:flex;gap:12px">'
+    + '<div class="avatar" style="width:36px;height:36px;font-size:14px;flex-shrink:0">' + botName.charAt(0).toUpperCase() + '</div>'
+    + '<div style="flex:1">'
+    + '<div style="color:#fff;font-weight:600;font-size:14px;margin-bottom:4px">' + botName
+    + ' <span style="background:#5865f2;color:#fff;font-size:10px;padding:2px 5px;border-radius:3px;vertical-align:middle">BOT</span></div>';
+
+  if (payload.content) html += '<div style="color:#dcddde;font-size:14px;line-height:1.6;margin-bottom:6px">' + payload.content.replace(/\n/g,'<br>') + '</div>';
+
+  if (embed) {
+    html += '<div style="background:#2f3136;border-left:4px solid ' + colorHex + ';border-radius:0 6px 6px 0;padding:14px;max-width:480px">';
+    if (embed.author) html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'
+      + (embed.author.icon_url ? '<img src="' + embed.author.icon_url + '" style="width:20px;height:20px;border-radius:50%">' : '')
+      + '<span style="font-size:13px;font-weight:600;color:#dcddde">' + embed.author.name + '</span></div>';
+    if (embed.title) html += '<div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:6px">' + embed.title + '</div>';
+    if (embed.description) html += '<div style="color:#dcddde;font-size:13px;line-height:1.6;margin-bottom:8px">' + embed.description.replace(/\n/g,'<br>') + '</div>';
+    if (embed.fields && embed.fields.length) {
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">';
+      embed.fields.forEach(function(f) {
+        html += '<div style="' + (f.inline ? '' : 'grid-column:1/-1;') + '">'
+          + '<div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:2px">' + f.name + '</div>'
+          + '<div style="font-size:13px;color:#dcddde">' + f.value + '</div></div>';
+      });
+      html += '</div>';
+    }
+    if (embed.image) html += '<img src="' + embed.image.url + '" style="max-width:100%;border-radius:4px;margin-bottom:8px" onerror="this.style.display=\'none\'">';
+    if (embed.thumbnail) html += '<img src="' + embed.thumbnail.url + '" style="float:right;width:70px;height:70px;border-radius:4px;object-fit:cover;margin-left:8px" onerror="this.style.display=\'none\'">';
+    if (embed.footer || embed.timestamp) {
+      html += '<div style="font-size:11px;color:#72767d;margin-top:8px;display:flex;align-items:center;gap:6px">';
+      if (embed.footer && embed.footer.icon_url) html += '<img src="' + embed.footer.icon_url + '" style="width:16px;height:16px;border-radius:50%">';
+      if (embed.footer && embed.footer.text) html += embed.footer.text;
+      if (embed.footer && embed.footer.text && embed.timestamp) html += ' • ';
+      if (embed.timestamp) html += new Date(embed.timestamp).toLocaleString('ko');
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  var container = document.getElementById('slash-preview-container');
+  if (payload.content || embed) {
+    container.innerHTML = html;
+  } else {
+    container.innerHTML = '<div style="text-align:center;color:#72767d;font-size:13px;padding:20px">내용을 입력하면 미리보기가 표시됩니다</div>';
+  }
+}
+
+async function sendSlashMessage() {
+  var hookId = document.getElementById('slash-hook').value;
+  if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
+  var payload = buildSlashPayload();
+  if (!payload.content && !payload.embeds) { notify('내용을 입력해주세요', 'error'); return; }
+
+  var r = await apiFetch('/send', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(Object.assign({ webhookId: hookId }, payload))
+  });
+  if (r.ok) { notify('✓ 발송 완료!', 'success'); await loadLogs(); }
+  else { notify(r.data.error || '발송 실패', 'error'); }
+}
+
+async function testSlashMessage() {
+  var hookId = document.getElementById('slash-hook').value;
+  if (!hookId) { notify('웹훅을 선택해주세요', 'error'); return; }
+  var r = await apiFetch('/send', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({
+      webhookId: hookId,
+      username: 'SlashBot Test',
+      embeds: [{
+        color: 0x5865f2,
+        title: '🧪 슬래시 메시지 테스트',
+        description: 'HookPanel 슬래시 스타일 메시지 테스트입니다!',
+        fields: [
+          { name: '상태', value: '✅ 정상', inline: true },
+          { name: '시간', value: new Date().toLocaleString('ko'), inline: true },
+          { name: '발송자', value: currentUser ? currentUser.username : '알 수 없음', inline: true }
+        ],
+        footer: { text: 'HookPanel' },
+        timestamp: new Date().toISOString()
+      }]
+    })
+  });
+  notify(r.ok ? '테스트 발송 완료!' : '발송 실패', r.ok ? 'success' : 'error');
+}
+
+function clearSlashForm() {
+  ['slash-content','slash-username','slash-avatar','slash-title','slash-desc','slash-thumb','slash-img','slash-author','slash-author-icon','slash-footer','slash-footer-icon'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('slash-color').value = '#5865f2';
+  document.getElementById('slash-timestamp').checked = false;
+  document.getElementById('slash-fields-list').innerHTML = '';
+  slashFields = [];
+  updateSlashPreview();
+}
+
+function updateSlashHookList() {
+  var sel = document.getElementById('slash-hook');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">웹훅을 선택하세요</option>'
+    + webhooks.map(function(w) { return '<option value="' + w.id + '">' + w.name + ' (' + w.channel + ')</option>'; }).join('');
+}
+
+function showStep(step) {
+  ['login','register','otp'].forEach(function(s) {
+    var el = document.getElementById('step-' + s);
+    if (el) el.style.display = 'none';
+  });
+  var target = document.getElementById('step-' + step);
+  if (target) target.style.display = 'block';
+}
+function showRegister() { showStep('register'); }
+function showLogin() { showStep('login'); }
+function showAddWebhook() { document.getElementById('modal-webhook').style.display = 'block'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// ── 템플릿 (stub - 서버 연동 필요) ──
+function saveTemplate() {
+  notify('템플릿 기능은 서버 연동이 필요합니다', 'info');
+  closeModal('modal-template');
+}
+
+// BUG FIX #3: updateTplPreview was called but never defined
+function updateTplPreview() {
+  var title = document.getElementById('tpl-embed-title') ? document.getElementById('tpl-embed-title').value : '';
+  var desc = document.getElementById('tpl-embed-desc') ? document.getElementById('tpl-embed-desc').value : '';
+  var content = document.getElementById('tpl-content') ? document.getElementById('tpl-content').value : '';
+  var color = document.getElementById('tpl-embed-color') ? document.getElementById('tpl-embed-color').value : '#5865f2';
+  var botName = document.getElementById('tpl-botname') ? document.getElementById('tpl-botname').value : 'WebhookBot';
+  var preview = document.getElementById('tpl-preview');
+  if (!preview) return;
+
+  var html = '<div style="display:flex;gap:10px">'
+    + '<div class="avatar" style="width:32px;height:32px;font-size:12px">' + (botName || 'W').charAt(0).toUpperCase() + '</div>'
+    + '<div style="flex:1"><div style="color:#fff;font-weight:600;font-size:13px;margin-bottom:3px">' + (botName || 'WebhookBot') + ' <span style="background:#5865f2;color:#fff;font-size:9px;padding:1px 4px;border-radius:2px">BOT</span></div>';
+  if (content) html += '<div style="color:#dcddde;font-size:13px;margin-bottom:5px">' + content + '</div>';
+  if (title || desc) {
+    html += '<div style="background:#2f3136;border-left:3px solid ' + color + ';border-radius:0 4px 4px 0;padding:10px">';
+    if (title) html += '<div style="color:#fff;font-weight:600;font-size:14px;margin-bottom:4px">' + title + '</div>';
+    if (desc) html += '<div style="color:#dcddde;font-size:12px">' + desc + '</div>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+  preview.innerHTML = (content || title || desc) ? html : '<div style="color:#72767d;font-size:12px;text-align:center;padding:10px">내용을 입력하면 미리보기가 표시됩니다</div>';
+}
+
+// ── BUG FIX #1: 업데이트 로그 - font-family 따옴표 충돌 수정 ──
+var changelogTypeMap = {
+  feature: { label: '신기능', color: 'var(--green)', bg: 'rgba(87,242,135,.1)' },
+  fix: { label: '버그픽스', color: 'var(--red)', bg: 'rgba(237,66,69,.1)' },
+  update: { label: '업데이트', color: 'var(--accent)', bg: 'rgba(88,101,242,.1)' }
+};
+
+function renderChangelogItem(c) {
+  var t = changelogTypeMap[c.type] || changelogTypeMap.update;
+  var date = new Date(c.created_at).toLocaleDateString('ko', { month: 'long', day: 'numeric' });
+  // 수정: font-family를 인라인 스타일 문자열 안에서 작은따옴표 충돌 없이 처리
+  return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">'
+    + '<div style="flex-shrink:0;text-align:center">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--accent)">' + c.version + '</div>'
+    + '<div style="font-size:10px;color:var(--text3)">' + date + '</div>'
+    + '</div>'
+    + '<div style="flex:1;min-width:0">'
+    + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+    + '<span style="font-size:10px;padding:1px 6px;border-radius:100px;background:' + t.bg + ';color:' + t.color + ';font-weight:600">' + t.label + '</span>'
+    + '<span style="font-size:13px;font-weight:600;color:var(--text)">' + c.title + '</span>'
+    + '</div>'
+    + '<div style="font-size:12px;color:var(--text3);line-height:1.5">' + c.content.replace(/\n/g, '<br>') + '</div>'
+    + '</div></div>';
+}
+
+async function loadChangelogs() {
+  try {
+    var res = await fetch('/api/changelog');
+    if (!res.ok) return;
+    var data = await res.json();
+    var clogs = data.changelogs || [];
+
+    var loginEl = document.getElementById('login-changelog');
+    var loginVer = document.getElementById('login-latest-version');
+    if (loginEl) {
+      if (clogs.length) {
+        if (loginVer) loginVer.textContent = clogs[0].version;
+        loginEl.innerHTML = clogs.slice(0, 5).map(renderChangelogItem).join('');
+      } else {
+        loginEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
+      }
+    }
+
+    var dashEl = document.getElementById('dash-changelog');
+    var dashVer = document.getElementById('dash-latest-version');
+    if (dashEl) {
+      if (clogs.length) {
+        if (dashVer) dashVer.textContent = clogs[0].version;
+        dashEl.innerHTML = clogs.map(renderChangelogItem).join('');
+      } else {
+        dashEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">업데이트 내역이 없습니다</div>';
+      }
+    }
+  } catch(e) {}
+}
+loadChangelogs();
+
+// ── 로그인 페이지 온라인 유저 수 ──
+async function fetchLoginOnlineCount() {
+  try {
+    var res = await fetch('/api/public-stats');
+    if (!res.ok) return;
+    var data = await res.json();
+    var el = document.getElementById('login-online-count');
+    if (el) el.textContent = data.onlineUsers || 0;
+  } catch(e) {}
+}
+fetchLoginOnlineCount();
+setInterval(fetchLoginOnlineCount, 30000);
+
+function toggleEmbed() {
+  document.getElementById('embed-fields').style.display = document.getElementById('embed-toggle').checked ? 'block' : 'none';
+  updatePreview();
+}
+function syncColorPicker() { document.getElementById('embed-color-text').value = document.getElementById('embed-color').value; updatePreview(); }
+function syncColorText() {
+  var v = document.getElementById('embed-color-text').value;
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) document.getElementById('embed-color').value = v;
+  updatePreview();
+}
+
+function updatePreview() {
+  var content = document.getElementById('send-content').value;
+  var useEmbed = document.getElementById('embed-toggle').checked;
+  var html = '';
+  if (content) html += '<div style="color:#dcddde;font-size:14px;line-height:1.6;margin-bottom:8px">' + content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div>';
+  if (useEmbed) {
+    var color = document.getElementById('embed-color').value;
+    var title = document.getElementById('embed-title').value;
+    var desc = document.getElementById('embed-desc').value;
+    var footer = document.getElementById('embed-footer').value;
+    var thumb = document.getElementById('embed-thumb').value;
+    var img = document.getElementById('embed-image').value;
+    html += '<div style="background:#2f3136;border-left:4px solid ' + color + ';border-radius:0 4px 4px 0;padding:12px;margin-top:4px">';
+    if (title) html += '<div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:6px">' + title + '</div>';
+    if (desc) html += '<div style="color:#dcddde;font-size:13px;line-height:1.5;margin-bottom:8px">' + desc.replace(/\n/g,'<br>') + '</div>';
+    if (img) html += '<img src="' + img + '" style="max-width:100%;border-radius:4px;margin-bottom:8px" onerror="this.style.display=\'none\'">';
+    if (thumb) html += '<img src="' + thumb + '" style="float:right;width:60px;height:60px;border-radius:4px;object-fit:cover" onerror="this.style.display=\'none\'">';
+    if (footer) html += '<div style="font-size:11px;color:#72767d;margin-top:8px">' + footer + '</div>';
+    html += '</div>';
+  }
+  var container = document.getElementById('preview-container');
+  if (html) {
+    var botName = document.getElementById('send-username').value || 'WebhookBot';
+    container.innerHTML = '<div style="display:flex;gap:12px"><div class="avatar">' + botName.charAt(0).toUpperCase() + '</div><div style="flex:1"><div style="color:#fff;font-weight:600;font-size:14px;margin-bottom:4px">' + botName + ' <span style="background:#5865f2;color:#fff;font-size:10px;padding:2px 5px;border-radius:3px;vertical-align:middle">BOT</span></div>' + html + '</div></div>';
+  } else {
+    container.innerHTML = '<div style="text-align:center;color:#72767d;font-size:13px;padding:20px">메시지를 입력하면 미리보기가 표시됩니다</div>';
+  }
+}
+</script>
+</body>
+</html>
