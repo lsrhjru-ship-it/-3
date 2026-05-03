@@ -17,6 +17,10 @@ export async function onRequestPost({ request, env }) {
   if (!user) return Response.json({ error: '로그인이 필요합니다' }, { status: 401 });
 
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
+
+  // last_seen 갱신 (실시간 온라인 감지용)
+  await supabase.from('users').update({ last_seen: new Date().toISOString() }).eq('username', user.username);
+
   const { webhookId, content, username, avatar_url, embeds } = await request.json();
   if (!webhookId) return Response.json({ error: '웹훅을 선택해주세요' }, { status: 400 });
 
