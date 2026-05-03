@@ -10,9 +10,9 @@ async function hashPassword(password, salt) {
 }
 
 async function verifyPassword(password, storedHash) {
-  if (!storedHash || storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) {
-    return false;
-  }
+  if (!storedHash) return false;
+  // bcrypt는 지원 불가
+  if (storedHash.startsWith('$2a$') || storedHash.startsWith('$2b$')) return false;
   const colonIdx = storedHash.indexOf(':');
   if (colonIdx === -1) return false;
   const salt = storedHash.substring(0, colonIdx);
@@ -26,8 +26,8 @@ export async function onRequestPost({ request, env }) {
   if (!id || !pw) return Response.json({ error: '아이디와 비밀번호를 입력해주세요' }, { status: 400 });
 
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
-
   const { data: user } = await supabase.from('users').select('*').eq('username', id).single();
+
   if (!user || !user.pw_hash) return Response.json({ error: '아이디 또는 비밀번호가 틀렸습니다' }, { status: 401 });
 
   const valid = await verifyPassword(pw, user.pw_hash);
