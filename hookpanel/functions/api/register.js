@@ -1,6 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
-import bcrypt from 'bcryptjs';
 import jwt from '@tsndr/cloudflare-worker-jwt';
+
+// bcrypt import 삭제! SHA-256으로 대체
+async function hashPassword(password) {
+  const salt = crypto.randomUUID().replace(/-/g, '');
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salt + password);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${salt}:${hash}`;  // "salt:hash" 형식으로 저장
+}
 
 export async function onRequestPost({ request, env }) {
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY);
@@ -15,7 +25,7 @@ export async function onRequestPost({ request, env }) {
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-    const pw_hash_temp = await bcrypt.hash(pw, 12);
+    const pw_hash_temp = await hashPassword(pw);  // SHA-256으로 변경
 
     await supabase.from('otp_store').delete().eq('email', email);
     const { error: storeErr } = await supabase.from('otp_store').insert({ email, code, expires_at, username: id, pw_hash_temp });
